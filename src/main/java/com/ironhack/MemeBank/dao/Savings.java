@@ -31,4 +31,12 @@ public class Savings extends Account {
     @Min(value=100, message = "Minimum balance for savings account is 100")
     private Money minimumBalance;
 
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride( name = "amount", column = @Column(name = "penaltyFee_amount")),
+            @AttributeOverride( name = "currency", column = @Column(name = "penaltyFee_currency", insertable=false, updatable=false)),
+    })
+    @Column(columnDefinition = "numeric default 40")
+    private Money penaltyFee;
+
 }

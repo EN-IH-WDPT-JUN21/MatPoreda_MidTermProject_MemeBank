@@ -38,6 +38,8 @@ public abstract class Account {
             @AttributeOverride( name = "currency", column = @Column(name = "penalty_fee_currency")),
     })
     private Money penaltyFee;
+
     private String creationDate;
+
     private Status status;
 }

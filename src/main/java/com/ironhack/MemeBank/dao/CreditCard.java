@@ -39,6 +39,7 @@ public class CreditCard{
             @AttributeOverride( name = "amount", column = @Column(name = "penaltyFee_amount")),
             @AttributeOverride( name = "currency", column = @Column(name = "penaltyFee_currency", insertable=false, updatable=false)),
     })
+    @Column(columnDefinition = "numeric default 40")
     private Money penaltyFee;
 
     @DecimalMin(value="0.1", inclusive=true, message="Interest rate for credit card cannot be lower than 0.1")
