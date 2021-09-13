@@ -1,13 +1,25 @@
-package com.ironhack.MemeBank.dao;
+package com.ironhack.MemeBank.dao.accounts;
 
+import com.ironhack.MemeBank.dao.users.AccountHolder;
+import com.ironhack.MemeBank.dao.Money;
+import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.enums.Status;
 import com.ironhack.MemeBank.security.SecretKey;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.List;
 
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public abstract class Account {
 
     @Id
@@ -39,7 +51,10 @@ public abstract class Account {
     })
     private Money penaltyFee;
 
-    private String creationDate;
+    private LocalDate creationDate;
 
     private Status status;
+
+    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Transaction> transactionList;
 }

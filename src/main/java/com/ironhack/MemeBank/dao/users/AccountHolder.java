@@ -1,5 +1,6 @@
-package com.ironhack.MemeBank.dao;
+package com.ironhack.MemeBank.dao.users;
 
+import com.ironhack.MemeBank.dao.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

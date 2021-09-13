@@ -1,8 +1,8 @@
-package com.ironhack.MemeBank.dao;
+package com.ironhack.MemeBank.dao.accounts;
 
+import com.ironhack.MemeBank.dao.Money;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
