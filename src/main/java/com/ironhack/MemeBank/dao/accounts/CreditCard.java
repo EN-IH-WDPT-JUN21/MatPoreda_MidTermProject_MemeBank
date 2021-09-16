@@ -18,11 +18,11 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Table(name= "credit_card")
-public class CreditCard{
+public class CreditCard extends Account{
 
-    @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy= GenerationType.IDENTITY)
+//    private Long id;
 
     @Embedded
     @AttributeOverrides({

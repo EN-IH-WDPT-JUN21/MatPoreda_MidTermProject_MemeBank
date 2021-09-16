@@ -24,6 +24,6 @@ public class Transaction {
     private Money amount;
     private BigDecimal availableBalance;
     @ManyToOne
-    @JoinColumn(name = "account_id")
+    @JoinColumn(name = "account")
     private Account account;
 }

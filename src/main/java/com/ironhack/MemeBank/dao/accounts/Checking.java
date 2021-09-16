@@ -26,6 +26,7 @@ public class Checking extends Account {
     })
     private Money monthlyMaintenanceFee;
 
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride( name = "amount", column = @Column(name = "penaltyFee_amount")),

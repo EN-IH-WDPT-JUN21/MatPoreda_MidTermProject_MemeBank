@@ -1,8 +1,8 @@
 package com.ironhack.MemeBank.dao.accounts;
 
-import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
+import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.enums.Status;
 import com.ironhack.MemeBank.security.SecretKey;
 import lombok.AllArgsConstructor;
@@ -23,6 +23,7 @@ import java.util.List;
 public abstract class Account {
 
     @Id
+    @Column(name="account_id")
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
@@ -36,14 +37,6 @@ public abstract class Account {
     @Embedded
     private SecretKey secretKey;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "primary_account_holder_id")
-    private AccountHolder primaryOwner;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "secondary_account_holder_id")
-    private AccountHolder secondaryOwner;
-
     @Embedded
     @AttributeOverrides({
             @AttributeOverride( name = "amount", column = @Column(name = "penalty_fee_amount")),
@@ -55,6 +48,6 @@ public abstract class Account {
 
     private Status status;
 
-    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Transaction> transactionList;
+//    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private List<Transaction> transactionList;
 }
