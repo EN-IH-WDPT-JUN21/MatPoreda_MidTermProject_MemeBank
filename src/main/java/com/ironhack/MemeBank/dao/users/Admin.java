@@ -15,6 +15,6 @@ import java.util.Set;
 @Table(name= "admin")
 @AllArgsConstructor
 public class Admin extends User {
-    public Admin(String username, String password, Role role) {
-    }
+
+
 }

@@ -3,7 +3,9 @@ package com.ironhack.MemeBank.controller.impl;
 import com.ironhack.MemeBank.dao.Role;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.users.Admin;
+import com.ironhack.MemeBank.dao.users.ThirdParty;
 import com.ironhack.MemeBank.dao.users.User;
+import com.ironhack.MemeBank.dto.CreateUserDTO;
 import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.repository.*;
 import com.ironhack.MemeBank.service.interfaces.UserService;
@@ -30,120 +32,11 @@ public class UserController {
     @Autowired
     AdminRepository adminRepository;
 
-//    @Autowired
-//    ThirdPartyRepository thirdPartyRepository;
+    @Autowired
+    ThirdPartyRepository thirdPartyRepository;
 
     @Autowired
     AccountHolderRepository accountHolderRepository;
-
-    @PostMapping("/admin")
-    public ResponseEntity<?> store(@RequestBody Admin admin) {
-        String         role      ="ADMIN";
-        Optional<User> localUser = userRepository.findByUsername(admin.getUsername());
-        Optional<Role> localRole =roleRepository.findByName(role);
-        if(localUser.isPresent()){
-            return new ResponseEntity<>("User ".concat(admin.getUsername()).concat(" already exists!"),
-                    HttpStatus.CONFLICT);
-        }
-
-        boolean validRole=false;
-
-        for (RoleType r : RoleType.values())
-        { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
-        }
-        if(!validRole) {
-            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
-                    HttpStatus.NOT_ACCEPTABLE);
-        }else{
-            Admin localAdmin=new Admin();
-            localAdmin.setUsername(admin.getUsername());
-            localAdmin.setPassword(admin.getPassword());
-
-            if (roleRepository.findByName(role).isPresent()){
-                localAdmin.setRole(roleRepository.findByName(role).get());
-            }else{
-                Role newAdminRole =new Role(role.toUpperCase());
-                roleRepository.save(newAdminRole);
-                localAdmin.setRole(newAdminRole);
-            }
-            adminRepository.save(localAdmin);
-        }
-        return new ResponseEntity<>("New ".concat(role.toUpperCase()).concat(" created"),
-                HttpStatus.CREATED);
-    }
-
-    @PostMapping("/account_holder")
-    public ResponseEntity<?> store(@RequestBody AccountHolder aHolder) {
-        String role="ACCOUNT_HOLDER";
-        Optional<User> localUser = userRepository.findByUsername(aHolder.getUsername());
-        Optional<Role> localRole=roleRepository.findByName(role);
-        if(localUser.isPresent()){
-            return new ResponseEntity<>("User ".concat(aHolder.getUsername()).concat(" already exists!"),
-                    HttpStatus.CONFLICT);
-        }
-        boolean validRole=false;
-        for (RoleType r : RoleType.values())
-        { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
-        }
-        if(!validRole) {
-            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
-                    HttpStatus.NOT_ACCEPTABLE);
-        }else{
-            AccountHolder localAccountHolder=new AccountHolder();
-            localAccountHolder.setUsername(aHolder.getUsername());
-            localAccountHolder.setPassword(aHolder.getPassword());
-            localAccountHolder.setName(aHolder.getName());
-            localAccountHolder.setDateOfBirth(aHolder.getDateOfBirth());
-            localAccountHolder.setPrimaryAddress(aHolder.getPrimaryAddress());
-            localAccountHolder.setMailingAddress(aHolder.getMailingAddress());
-
-            if (roleRepository.findByName(role).isPresent()){
-                localAccountHolder.setRole(roleRepository.findByName(role).get());
-            }else{
-                Role newAHolderRole =new Role(role.toUpperCase());
-                roleRepository.save(newAHolderRole);
-                localAccountHolder.setRole(newAHolderRole);
-            }
-            accountHolderRepository.save(localAccountHolder);
-        }
-        return new ResponseEntity<>("New ".concat(role.toUpperCase()).concat(" created"),
-                HttpStatus.CREATED);
-    }
-
-//    @PostMapping("/third_party")
-//    public ResponseEntity<?> store(@RequestBody ThirdParty tParty) {
-//        String role="THIRD_PARTY";
-//        Optional<User> localUser = userRepository.findByUsername(tParty.getUsername());
-//        Optional<Role> localRole=roleRepository.findByName(role);
-//        if(localUser.isPresent()){
-//            return new ResponseEntity<>("User ".concat(tParty.getUsername()).concat(" already exists!"),
-//                    HttpStatus.CONFLICT);
-//        }
-//        boolean validRole=false;
-//        for (RoleType r : RoleType.values())
-//        { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
-//        }
-//        if(!validRole) {
-//            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
-//                    HttpStatus.NOT_ACCEPTABLE);
-//        }else{
-//            ThirdParty localTParty=new ThirdParty();
-//            localTParty.setUsername(tParty.getUsername());
-//            localTParty.setPassword(tParty.getPassword());
-//
-//            if (roleRepository.findByName(role).isPresent()){
-//                localTParty.setRole(roleRepository.findByName(role).get());
-//            }else{
-//                Role newTPartyRole =new Role(role.toUpperCase());
-//                roleRepository.save(newTPartyRole);
-//                localTParty.setRole(newTPartyRole);
-//            }
-//            thirdPartyRepository.save(localTParty);
-//        }
-//        return new ResponseEntity<>("New ".concat(role.toUpperCase()).concat(" created"),
-//                HttpStatus.CREATED);
-//    }
-
 
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)
@@ -151,5 +44,94 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @PostMapping("/users")
+    public ResponseEntity<?> store(@RequestBody CreateUserDTO passedObject) {
+        String         role      =passedObject.getRoleType().toUpperCase().replaceAll("\\s+","");
+        Optional<User> localUser = userRepository.findByUsername(passedObject.getUsername());
+        Role verifiedRole;
 
+        //check if password or username are empty
+        if(passedObject.getUsername().isEmpty() || passedObject.getPassword().isEmpty()){
+            return new ResponseEntity<>("Username and password cannot be empty!",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        //Check if user already exists
+        if(userRepository.findByUsername(passedObject.getUsername()).isPresent()){
+            return new ResponseEntity<>("User ".concat(passedObject.getUsername()).concat(" already exists!"),
+                    HttpStatus.CONFLICT);
+        }
+
+        //Check if given role exists, if not validate enum and create one
+        boolean validRole=false;
+        for (RoleType r : RoleType.values())
+        { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
+        }
+        if(!validRole) {
+            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
+                    HttpStatus.NOT_ACCEPTABLE);
+        }else{
+            if (roleRepository.findByName(role).isPresent()){
+                verifiedRole=roleRepository.findByName(role).get();
+            }else{
+                verifiedRole =new Role(role.toUpperCase());
+                roleRepository.save(verifiedRole);
+            }
+
+            //create specific users
+
+            switch(role){
+                case "ADMIN":{
+                    Admin localAdmin=new Admin();
+                    localAdmin.setUsername(passedObject.getUsername());
+                    localAdmin.setPassword(passedObject.getPassword());
+                    localAdmin.setRole(verifiedRole);
+                    adminRepository.save(localAdmin);
+                    break;
+                }
+
+                case "ACCOUNT_HOLDER":{
+                    AccountHolder localAccountHolder=new AccountHolder();
+                    localAccountHolder.setUsername(passedObject.getUsername());
+                    localAccountHolder.setPassword(passedObject.getPassword());
+
+                    if(passedObject.getName().isEmpty()){
+                        return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localAccountHolder.setName(passedObject.getName());}
+
+                    if(passedObject.getDateOfBirth().isEmpty()){
+                        return new ResponseEntity<>("Date of birth be empty!", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localAccountHolder.setDateOfBirth(passedObject.getDateOfBirth());}
+
+//                   if(passedObject.getPrimaryAddress().getPrimaryAddress().isEmpty()){
+//                        return new ResponseEntity<>("Primary address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+//                    } else{localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());}
+                    localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());
+//                    if(passedObject.getPrimaryAddress().getMailingAddress().isEmpty()){
+//                        return new ResponseEntity<>("Mailing address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+//                    } else{localAccountHolder.setMailingAddress(passedObject.getMailingAddress());}
+                    localAccountHolder.setMailingAddress(passedObject.getMailingAddress());
+
+                    localAccountHolder.setRole(verifiedRole);
+                    accountHolderRepository.save(localAccountHolder);
+
+                    break;
+                    }
+                case "THIRD_PARTY":{
+                    ThirdParty localThirdParty =new ThirdParty();
+                    localThirdParty.setUsername(passedObject.getUsername());
+                    localThirdParty.setPassword(passedObject.getPassword());
+                    localThirdParty.setRole(verifiedRole);
+
+                    if(passedObject.getName().isEmpty()){
+                        return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localThirdParty.setName(passedObject.getName());}
+                    thirdPartyRepository.save(localThirdParty);
+                    break;
+                }
+            }
+        }
+        return new ResponseEntity<>("New ".concat(role).concat(" created"),
+                HttpStatus.CREATED);
+    }
 }
