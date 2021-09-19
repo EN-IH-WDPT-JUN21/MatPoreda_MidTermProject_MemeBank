@@ -13,6 +13,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Table(name="account_holder")
 public class AccountHolder extends User{
+    @Column(unique=true)
     private String name;
     private String dateOfBirth;
 

@@ -14,12 +14,20 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 @Embeddable
+@AllArgsConstructor
+@Getter
+@Setter
 public class Money {
     private static final Currency USD = Currency.getInstance("USD");
     private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
 
     private final Currency currency;
     private BigDecimal amount;
+
+    public Money() {
+        this.currency = USD;
+        this.amount=new BigDecimal(0);
+    }
 
     /**
      * Class constructor specifying amount, currency, and rounding
@@ -43,6 +51,8 @@ public class Money {
     public Money(BigDecimal amount) {
         this(amount, USD, DEFAULT_ROUNDING);
     }
+
+
 
     public BigDecimal increaseAmount(Money money) {
         setAmount(this.amount.add(money.amount));

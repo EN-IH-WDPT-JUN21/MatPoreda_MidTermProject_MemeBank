@@ -17,8 +17,8 @@ import java.math.BigDecimal;
 @Setter
 @Table(name= "Savings")
 public class Savings extends Account {
-    @DecimalMin(value="0.0000", inclusive=true, message="Interest rate cannot be negative")
-    @DecimalMax(value="0.05", inclusive=true, message="Interest rate cannot be higher than 0.05")
+    @DecimalMin(value="0.0025", inclusive=true, message="Interest rate cannot be negative, or lower than 0.0025")
+    @DecimalMax(value="0.5", inclusive=true, message="Interest rate cannot be higher than 0.5")
     @Column(columnDefinition = "decimal default 0.0025")
     private BigDecimal interestRate;
 
@@ -28,15 +28,17 @@ public class Savings extends Account {
             @AttributeOverride( name = "currency", column = @Column(name = "minimum_balance_currency")),
     })
     @Column(columnDefinition = "numeric default 1000")
-    @Min(value=100, message = "Minimum balance for savings account is 100")
+//    @Min(value=100L, message = "Minimum balance for savings account is 100")
     private Money minimumBalance;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride( name = "amount", column = @Column(name = "penaltyFee_amount")),
-            @AttributeOverride( name = "currency", column = @Column(name = "penaltyFee_currency", insertable=false, updatable=false)),
-    })
-    @Column(columnDefinition = "numeric default 40")
-    private Money penaltyFee;
+//    @Embedded
+//    @AttributeOverrides({
+//            @AttributeOverride( name = "amount", column = @Column(name = "penaltyFee_amount")),
+//            @AttributeOverride( name = "currency", column = @Column(name = "penaltyFee_currency", insertable=false, updatable=false)),
+//    })
+//    @Column(columnDefinition = "numeric default 40")
+//    private Money penaltyFee;
 
+    public Savings() {
+    }
 }

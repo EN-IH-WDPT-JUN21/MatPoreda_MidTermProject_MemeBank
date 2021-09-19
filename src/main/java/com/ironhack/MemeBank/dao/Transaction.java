@@ -23,7 +23,8 @@ public class Transaction {
     private String status;
     private Money amount;
     private BigDecimal availableBalance;
-    @ManyToOne
-    @JoinColumn(name = "account")
+    @ManyToOne(cascade=CascadeType.ALL)
+    @JoinColumn(nullable=true)
     private Account account;
+
 }

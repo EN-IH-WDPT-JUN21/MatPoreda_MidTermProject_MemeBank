@@ -3,6 +3,7 @@ package com.ironhack.MemeBank.dao.users;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.MemeBank.dao.Role;
+import com.ironhack.MemeBank.dao.accounts.Account;
 import com.ironhack.MemeBank.repository.RoleRepository;
 import com.ironhack.MemeBank.security.UserRoles;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,12 @@ public class User {
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(name="role_id")
     private Role role;
+
+    @OneToMany(mappedBy = "primaryOwner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Account> primaryOwnedAccounts = new HashSet<>();
+
+    @OneToMany(mappedBy = "secondaryOwner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Account> secondaryOwnedAccounts = new HashSet<>();
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 //    @JsonIgnore
