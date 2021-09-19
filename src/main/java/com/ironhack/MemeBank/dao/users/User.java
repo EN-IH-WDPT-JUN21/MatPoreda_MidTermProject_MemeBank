@@ -48,9 +48,11 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "primaryOwner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Account> primaryOwnedAccounts = new HashSet<>();
 
     @OneToMany(mappedBy = "secondaryOwner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Account> secondaryOwnedAccounts = new HashSet<>();
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

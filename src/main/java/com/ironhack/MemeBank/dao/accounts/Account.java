@@ -33,7 +33,7 @@ public abstract class Account {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride( name = "amount", column = @Column(name = "balance_amount")),
+            @AttributeOverride( name = "amount", column = @Column(name = "balance_amount",columnDefinition = "numeric default 0.00", precision = 10, scale = 10)),
             @AttributeOverride( name = "currency", column = @Column(name = "balance_currency")),
     })
     private Money balance;
@@ -44,12 +44,12 @@ public abstract class Account {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride( name = "amount", column = @Column(name = "penalty_fee_amount")),
+            @AttributeOverride( name = "amount", column = @Column(name = "penalty_fee_amount",columnDefinition = "numeric default 40.00", precision = 10, scale = 10)),
             @AttributeOverride( name = "currency", column = @Column(name = "penalty_fee_currency")),
     })
-    @Column(columnDefinition = "numeric default 40")
     private Money penaltyFee;
 
+    @Temporal(TemporalType.DATE)
     private Date creationDate;
 
     private Status status;
