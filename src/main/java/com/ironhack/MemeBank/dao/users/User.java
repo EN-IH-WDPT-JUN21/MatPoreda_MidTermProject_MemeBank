@@ -30,6 +30,7 @@ public class User {
     private Long id;
     @Column(unique=true)
     private String username;
+    @JsonIgnore
     private String password;
 
 //    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade=CascadeType.ALL)

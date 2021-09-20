@@ -30,8 +30,6 @@ public class CreditCard extends Account{
             @AttributeOverride( name = "currency", column = @Column(name = "creditLimit_currency")),
     })
     @Column(columnDefinition = "numeric default 100")
-    @Min(value=100)
-    @Max(value=100000)
     private Money creditLimit;
 
 
@@ -44,7 +42,9 @@ public class CreditCard extends Account{
     private Money penaltyFee;
 
     @DecimalMin(value="0.1", inclusive=true, message="Interest rate for credit card cannot be lower than 0.1")
-    @Column(columnDefinition = "decimal default 0.2")
+    @Column(columnDefinition = "decimal(19,10) default 0.2")
     private BigDecimal interestRate;
 
+    public CreditCard() {
+    }
 }

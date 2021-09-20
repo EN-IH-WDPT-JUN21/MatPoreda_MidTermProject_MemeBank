@@ -1,16 +1,26 @@
 package com.ironhack.MemeBank.service.impl;
 
+import com.ironhack.MemeBank.dao.Role;
+import com.ironhack.MemeBank.dao.users.AccountHolder;
+import com.ironhack.MemeBank.dao.users.Admin;
+import com.ironhack.MemeBank.dao.users.ThirdParty;
 import com.ironhack.MemeBank.dao.users.User;
-import com.ironhack.MemeBank.repository.RoleRepository;
-import com.ironhack.MemeBank.repository.UserRepository;
+import com.ironhack.MemeBank.dto.CreateUserDTO;
+import com.ironhack.MemeBank.enums.RoleType;
+import com.ironhack.MemeBank.repository.*;
 import com.ironhack.MemeBank.service.interfaces.UserService;
+import org.apache.commons.validator.GenericValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -20,6 +30,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private AccountHolderRepository accountHolderRepository;
+
+    @Autowired
+    private ThirdPartyRepository thirdPartyRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -39,58 +58,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(username).get();
     }
 
-//    public User findByEmail(String email) {
-//        return userRepository.findByEmail(email);
-//    }
 
-
-//    public Optional<User> createUser(User user, Set<UserRoles> userRoles) {
-//        Optional<User> localUser = userRepository.findByUsername(user.getUsername());
-//
-//        if (localUser.isPresent()) {
-//            LOG.info("User with username {} already exist. Nothing will be done. ", user.getUsername());
-//        } else {
-////            String encryptedPassword = passwordEncoder.encode(user.getPassword());
-////            user.setPassword(encryptedPassword);
-//
-//            for (UserRoles ur : userRoles) {
-//                roleRepository.save(ur.getRole());
-//            }
-//
-//            user.getUserRoles().addAll(userRoles);
-//
-////            user.setPrimaryAccount(accountService.createPrimaryAccount());
-////            user.setSavingsAccount(accountService.createSavingsAccount());
-//            userRepository.save(user);
-//            localUser = userRepository.findByUsername(user.getUsername());
-//        }
-//
-//        return localUser;
-//    }
-
-//    public boolean checkUserExists(String username, String email){
-//        if (checkUsernameExists(username) || checkEmailExists(username)) {
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
-
-    public boolean checkUsernameExists(String username) {
-        if (null != findByUsername(username)) {
-            return true;
-        }
-
-        return false;
-    }
-
-//    public boolean checkEmailExists(String email) {
-//        if (null != findByEmail(email)) {
-//            return true;
-//        }
-//
-//        return false;
-//    }
 
     public User saveUser (User user) {
         return userRepository.save(user);
@@ -98,6 +66,103 @@ public class UserServiceImpl implements UserService {
 
     public List<User> findUserList() {
         return userRepository.findAll();
+    }
+
+        public ResponseEntity<?> storeAny(@RequestBody CreateUserDTO passedObject) {
+        if(GenericValidator.isBlankOrNull(passedObject.getRoleType())){
+            return new ResponseEntity<>("Role type must be specified!",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        //check if password or username are empty
+        if(GenericValidator.isBlankOrNull(passedObject.getUsername()) || GenericValidator.isBlankOrNull(passedObject.getPassword())){
+            return new ResponseEntity<>("Username and password cannot be empty!",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        String         role      =passedObject.getRoleType().toUpperCase().replaceAll("\\s+","");
+        Optional<User> localUser = userRepository.findByUsername(passedObject.getUsername());
+        Role verifiedRole;
+
+
+
+        //Check if user already exists
+        if(userRepository.findByUsername(passedObject.getUsername()).isPresent()){
+            return new ResponseEntity<>("User ".concat(passedObject.getUsername()).concat(" already exists!"),
+                    HttpStatus.CONFLICT);
+        }
+
+        //Check if given role exists, if not validate enum and create one
+        boolean validRole=false;
+        for (RoleType r : RoleType.values())
+        { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
+        }
+        if(!validRole) {
+            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
+                    HttpStatus.NOT_ACCEPTABLE);
+        }else{
+            if (roleRepository.findByName(role).isPresent()){
+                verifiedRole=roleRepository.findByName(role).get();
+            }else{
+                verifiedRole =new Role(role.toUpperCase());
+                roleRepository.save(verifiedRole);
+            }
+
+            //create specific users
+
+            switch(role){
+                case "ADMIN":{
+                    Admin localAdmin=new Admin();
+                    localAdmin.setUsername(passedObject.getUsername());
+                    localAdmin.setPassword(passedObject.getPassword());
+                    localAdmin.setRole(verifiedRole);
+                    adminRepository.save(localAdmin);
+                    break;
+                }
+
+                case "ACCOUNT_HOLDER":{
+                    AccountHolder localAccountHolder=new AccountHolder();
+                    localAccountHolder.setUsername(passedObject.getUsername());
+                    localAccountHolder.setPassword(passedObject.getPassword());
+
+                    if(GenericValidator.isBlankOrNull(passedObject.getName())){
+                        return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localAccountHolder.setName(passedObject.getName());}
+
+                    if(GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || GenericValidator.isDate(passedObject.getDateOfBirth(), "dd-MM-yyyy", true)){
+                        return new ResponseEntity<>("Date of birth cannot be empty and must be provided in dd-MM-yyyy format", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localAccountHolder.setDateOfBirth(passedObject.getDateOfBirth());}
+
+//                   if(passedObject.getPrimaryAddress().getPrimaryAddress().isEmpty()){
+//                        return new ResponseEntity<>("Primary address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+//                    } else{localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());}
+                    localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());
+//                    if(passedObject.getPrimaryAddress().getMailingAddress().isEmpty()){
+//                        return new ResponseEntity<>("Mailing address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+//                    } else{localAccountHolder.setMailingAddress(passedObject.getMailingAddress());}
+                    localAccountHolder.setMailingAddress(passedObject.getMailingAddress());
+
+                    localAccountHolder.setRole(verifiedRole);
+                    accountHolderRepository.save(localAccountHolder);
+
+                    break;
+                }
+                case "THIRD_PARTY":{
+                    ThirdParty localThirdParty =new ThirdParty();
+                    localThirdParty.setUsername(passedObject.getUsername());
+                    localThirdParty.setPassword(passedObject.getPassword());
+                    localThirdParty.setRole(verifiedRole);
+
+                    if(GenericValidator.isBlankOrNull(passedObject.getName())){
+                        return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localThirdParty.setName(passedObject.getName());}
+                    thirdPartyRepository.save(localThirdParty);
+                    break;
+                }
+            }
+        }
+        return new ResponseEntity<>("New ".concat(role).concat(" created"),
+                HttpStatus.CREATED);
     }
 
 //    public void enableUser (String username) {

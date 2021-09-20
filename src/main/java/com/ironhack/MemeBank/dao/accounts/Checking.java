@@ -35,4 +35,6 @@ public class Checking extends Account {
     @Column(columnDefinition = "numeric default 40")
     private Money penaltyFee;
 
+    public Checking() {
+    }
 }
