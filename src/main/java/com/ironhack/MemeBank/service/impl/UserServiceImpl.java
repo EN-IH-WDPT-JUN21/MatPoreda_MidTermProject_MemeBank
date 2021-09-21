@@ -8,13 +8,18 @@ import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.CreateUserDTO;
 import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.repository.*;
+import com.ironhack.MemeBank.security.Passwords;
+import com.ironhack.MemeBank.security.SecurityConfiguration;
 import com.ironhack.MemeBank.service.interfaces.UserService;
 import org.apache.commons.validator.GenericValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +47,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    SecurityConfiguration securityConfiguration;
 
 
 //    @Autowired
@@ -80,6 +88,7 @@ public class UserServiceImpl implements UserService {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
+
         String         role      =passedObject.getRoleType().toUpperCase().replaceAll("\\s+","");
         Optional<User> localUser = userRepository.findByUsername(passedObject.getUsername());
         Role verifiedRole;
@@ -114,7 +123,8 @@ public class UserServiceImpl implements UserService {
                 case "ADMIN":{
                     Admin localAdmin=new Admin();
                     localAdmin.setUsername(passedObject.getUsername());
-                    localAdmin.setPassword(passedObject.getPassword());
+                    localAdmin.setPassword(securityConfiguration.passwordEncoder()
+                            .encode(passedObject.getPassword()));
                     localAdmin.setRole(verifiedRole);
                     adminRepository.save(localAdmin);
                     break;
@@ -123,7 +133,8 @@ public class UserServiceImpl implements UserService {
                 case "ACCOUNT_HOLDER":{
                     AccountHolder localAccountHolder=new AccountHolder();
                     localAccountHolder.setUsername(passedObject.getUsername());
-                    localAccountHolder.setPassword(passedObject.getPassword());
+                    localAccountHolder.setPassword(securityConfiguration.passwordEncoder()
+                            .encode(passedObject.getPassword()));
 
                     if(GenericValidator.isBlankOrNull(passedObject.getName())){
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
@@ -150,8 +161,15 @@ public class UserServiceImpl implements UserService {
                 case "THIRD_PARTY":{
                     ThirdParty localThirdParty =new ThirdParty();
                     localThirdParty.setUsername(passedObject.getUsername());
-                    localThirdParty.setPassword(passedObject.getPassword());
+                    localThirdParty.setPassword(securityConfiguration.passwordEncoder()
+                            .encode(passedObject.getPassword()));
                     localThirdParty.setRole(verifiedRole);
+
+                    var salt     = Passwords.getNextSalt();
+                    var password = localThirdParty.getPassword().toCharArray();
+                    var secretKey=Passwords.hash(password, salt);
+                    localThirdParty.setHashKey(secretKey);
+                    localThirdParty.setSalt(salt);
 
                     if(GenericValidator.isBlankOrNull(passedObject.getName())){
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);

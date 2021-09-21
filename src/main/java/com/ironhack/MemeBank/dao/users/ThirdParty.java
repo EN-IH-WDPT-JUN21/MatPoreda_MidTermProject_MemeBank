@@ -15,7 +15,8 @@ import javax.persistence.Table;
 @Table(name="third_party")
 public class ThirdParty extends User{
     private String name;
-    private String hashKey;
+    private byte[] hashKey;
+    private byte[] salt;
 
     public ThirdParty() {
         

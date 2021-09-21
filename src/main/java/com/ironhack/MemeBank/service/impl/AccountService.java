@@ -1,10 +1,7 @@
 package com.ironhack.MemeBank.service.impl;
 
 import com.ironhack.MemeBank.dao.Money;
-import com.ironhack.MemeBank.dao.accounts.Checking;
-import com.ironhack.MemeBank.dao.accounts.CreditCard;
-import com.ironhack.MemeBank.dao.accounts.Savings;
-import com.ironhack.MemeBank.dao.accounts.StudentChecking;
+import com.ironhack.MemeBank.dao.accounts.*;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dto.CreateAccountDTO;
 import com.ironhack.MemeBank.enums.AccountType;
@@ -785,5 +782,10 @@ public class AccountService {
 
         return new ResponseEntity<>("New ".concat(accountType).concat(" account created"),
                 HttpStatus.CREATED);
+    }
+
+
+    public Money checkAccountBalance(Account account) {
+        return account.getBalance();
     }
 }

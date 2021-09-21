@@ -82,14 +82,8 @@ public class AccountController {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if(accountType.equals("CHECKING")){
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            formatter = formatter.withLocale( Locale.ENGLISH );
-            LocalDate birthDate = LocalDate.parse(primaryOwner.get().getDateOfBirth(), formatter);
-            LocalDate today = LocalDate.now();
-            int years = Period.between(birthDate, today).getYears();
-            if (years<24){accountType="STUDENT_CHECKING";}
-
+        if(accountType.equals("CHECKING") || accountType.equals("CHECKING")){
+            accountType="CHECKING";
         }
 
         switch(accountType) {

@@ -28,4 +28,5 @@ public class TransactionDTO {
     private Optional<String> amount;
     private Optional<String> availableBalance;
     private Optional<String> accountId;
+    private Optional<String> secretKey;
 }
