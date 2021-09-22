@@ -1,5 +1,5 @@
 package com.ironhack.MemeBank.enums;
 
 public enum TransactionType {
-    DEPOSIT, WTHDRAWAL, TRANSFER, CHARGE, ACCRUAL
+    DEPOSIT, WITHDRAWAL, TRANSFER, CHARGE, ACCRUAL, PENALTY_FEE
 }

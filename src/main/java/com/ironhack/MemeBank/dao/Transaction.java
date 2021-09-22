@@ -1,5 +1,6 @@
 package com.ironhack.MemeBank.dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.MemeBank.dao.accounts.Account;
 import com.ironhack.MemeBank.enums.TransactionStatus;
 import com.ironhack.MemeBank.enums.TransactionType;
@@ -32,6 +33,7 @@ public class Transaction {
     private BigDecimal availableBalance;
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=true)
+    @JsonIgnore
     private Account account;
     private String responseStatus;
 

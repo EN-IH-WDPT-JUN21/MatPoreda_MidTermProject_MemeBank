@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -69,6 +70,9 @@ public class UserController {
 
     @PostMapping("/users")
     public ResponseEntity<?> store(@RequestBody CreateUserDTO passedObject) {
+        if(Objects.isNull(passedObject)){
+            return new ResponseEntity<>("Post request must provide valid body.",HttpStatus.NOT_ACCEPTABLE);
+        }
         return userServiceImpl.storeAny(passedObject);
     }
 }

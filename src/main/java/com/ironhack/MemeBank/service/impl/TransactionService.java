@@ -14,6 +14,7 @@ import org.apache.commons.validator.GenericValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.CascadeType;
 import javax.persistence.JoinColumn;
@@ -27,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Optional;
-
+@Service
 public class TransactionService {
 
     @Autowired
@@ -35,6 +36,20 @@ public class TransactionService {
 
     @Autowired
     TransactionRepository transactionRepository;
+
+    public Transaction newPenaltyFee(Account account){
+        Transaction newTransaction    = new Transaction();
+        newTransaction.setAccount(account);
+        newTransaction.setType(TransactionType.PENALTY_FEE);
+        newTransaction.setAvailableBalance(account.getBalance().getAmount());
+        newTransaction.setStatus(TransactionStatus.ACCEPTED);
+        newTransaction.setAmount(new Money(new BigDecimal(0).subtract(account.getPenaltyFee().getAmount())));
+        newTransaction.setDate(LocalDateTime.now());
+        newTransaction.setDescription("Penalty for reaching the account limit");
+        newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("PenaltyFee Applied",
+                HttpStatus.CREATED)));
+        return newTransaction;
+    }
 
     public ResponseEntity<?> storeTransaction(@Valid TransactionDTO passedObject) {
         LocalDateTime     date;
@@ -66,8 +81,8 @@ public class TransactionService {
                 }
             }
 
-        if (GenericValidator.isBlankOrNull(passedObject.getDescription().get())) {
-            newTransaction.setDescription(passedObject.getDescription().get());
+        if (GenericValidator.isBlankOrNull(passedObject.getDescription())) {
+            newTransaction.setDescription(passedObject.getDescription());
         } else {
             newTransaction.setDescription(null);
         }
@@ -76,7 +91,7 @@ public class TransactionService {
             return new ResponseEntity<>("Transaction type must be provided",
                     HttpStatus.NOT_ACCEPTABLE);
         }
-        String transactionType =passedObject.getType().get().toUpperCase().replaceAll("\\s+","");
+        String transactionType =passedObject.getType().toUpperCase().replaceAll("\\s+","");
         boolean validTransaction=false;
         for (TransactionType t : TransactionType.values())
         { if (transactionType.equalsIgnoreCase(t.toString())){ validTransaction=true;}
@@ -87,23 +102,23 @@ public class TransactionService {
         }
         type=TransactionType.valueOf(transactionType);
 
-        if(GenericValidator.isBlankOrNull(passedObject.getAccountId().get())){
+        if(GenericValidator.isBlankOrNull(passedObject.getAccountId())){
             return new ResponseEntity<>("Account ID must be provided",
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if(GenericValidator.isBlankOrNull(passedObject.getAmount().get()) || GenericValidator.isDouble(passedObject.getAmount().get())){
+        if(GenericValidator.isBlankOrNull(passedObject.getAmount()) || GenericValidator.isDouble(passedObject.getAmount())){
             return new ResponseEntity<>("Amount must be provided and must be numeric",
                     HttpStatus.NOT_ACCEPTABLE);
         }else{
-            amount=new Money(new BigDecimal(passedObject.getAmount().get()));
+            amount=new Money(new BigDecimal(passedObject.getAmount()));
         }
 
-        if(GenericValidator.isBlankOrNull(passedObject.getAccountId().get()) || !GenericValidator.isLong(passedObject.getAccountId().get())){
+        if(GenericValidator.isBlankOrNull(passedObject.getAccountId()) || !GenericValidator.isLong(passedObject.getAccountId())){
             return new ResponseEntity<>("Account Id must be provided and must be numeric",
                     HttpStatus.NOT_ACCEPTABLE);
         }else{
-            account=accountRepository.findById(Long.valueOf(passedObject.getAccountId().get()));
+            account=accountRepository.findById(Long.valueOf(passedObject.getAccountId()));
         }
 
         if(account.isEmpty()){

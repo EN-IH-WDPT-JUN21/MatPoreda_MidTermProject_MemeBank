@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -15,7 +16,7 @@ import javax.persistence.*;
 public class AccountHolder extends User{
     @Column(unique=true)
     private String name;
-    private String dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn

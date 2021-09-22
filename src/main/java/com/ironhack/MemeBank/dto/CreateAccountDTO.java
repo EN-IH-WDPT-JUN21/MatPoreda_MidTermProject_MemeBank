@@ -24,16 +24,16 @@ import java.util.Optional;
 public class CreateAccountDTO {
     @NotBlank(message="Account type cannot be empty")
     private String accountType;
-    private Optional<String> balance;
-    private Optional<String> penaltyFee;
-    private Optional<String> creationDate;
+    private String balance;
+    private String penaltyFee;
+    private String creationDate;
 //    private Status status;
-    private Optional<String> minimumBalance;
-    private Optional<String> monthlyMaintenanceFee;
-    private Optional<String> interestRate;
-    private Optional<String> creditLimit;
+    private String minimumBalance;
+    private String monthlyMaintenanceFee;
+    private String interestRate;
+    private String creditLimit;
     @NotBlank
     private String primaryOwnerName;
-    private Optional<String> secondaryOwnerName;
+    private String secondaryOwnerName;
 
 }

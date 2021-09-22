@@ -1,6 +1,7 @@
 package com.ironhack.MemeBank.service.impl;
 
 import com.ironhack.MemeBank.dao.Money;
+import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.accounts.*;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dto.CreateAccountDTO;
@@ -58,6 +59,24 @@ public class AccountService {
     @Autowired
     CreditCardRepository creditCardRepository;
 
+    @Autowired
+    TransactionRepository transactionRepository;
+
+    public boolean checkLastpenaltyFee(Account account, Transaction currentTransaction){
+        return transactionRepository.findLastTransactionWithGivenMonthAndTypeAndAccountId(account.getId(), 5, currentTransaction.getDate()).isPresent();
+    };
+
+    public Money findMinimumBalance(Account account) {
+        if (checkingRepository.findById(account.getId()).isPresent()) {
+            return checkingRepository.findById(account.getId()).get().getMinimumBalance();
+        }
+        if (savingsRepository.findById(account.getId()).isPresent()) {
+            return savingsRepository.findById(account.getId()).get().getMinimumBalance();
+        }
+        return new Money(new BigDecimal(0));
+    }
+
+
     public ResponseEntity<?> storeSavings(@Valid CreateAccountDTO passedObject) {
 
         //check if primary owner is provided
@@ -73,12 +92,12 @@ public class AccountService {
         Savings newAccount = new Savings();
         if (passedObject.getBalance().isEmpty()) {
             newAccount.setBalance(new Money(new BigDecimal(100)));
-        } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+        } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
             return new ResponseEntity<>("Starting balance for savings account must be numeric and cannot be lower than minimum balance.",
                     HttpStatus.NOT_ACCEPTABLE);
         } else {
             try {
-                newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
             } catch (Exception e) {
                 e.printStackTrace();
                 return new ResponseEntity<>("Minimum balance must be provided.",
@@ -95,13 +114,13 @@ public class AccountService {
 
         newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-        if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+        if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
             newAccount.setCreationDate(new Date());
         } else {
-            if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+            if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                 try {
-                    newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                    newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                 } catch (Exception e) {
                     e.printStackTrace();
                     return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -116,16 +135,16 @@ public class AccountService {
         newAccount.setStatus(Status.ACTIVE);
 
         newAccount.setPrimaryOwner(primaryOwner.get());
-        if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+        if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
             secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
         }
 
 
-        if (passedObject.getInterestRate() != null && passedObject.getInterestRate().isPresent()) {
-            if (GenericValidator.isDouble(passedObject.getInterestRate().get())) {
-                newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate().get()));
+        if (passedObject.getInterestRate() != null && !passedObject.getInterestRate().isEmpty()) {
+            if (GenericValidator.isDouble(passedObject.getInterestRate())) {
+                newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate()));
             } else {
                 return new ResponseEntity<>("Invalid input for interest rate. Please provide numeric data",
                         HttpStatus.NOT_ACCEPTABLE);
@@ -134,9 +153,9 @@ public class AccountService {
             newAccount.setInterestRate(new BigDecimal(0.0025));
         }
 
-        if (passedObject.getMinimumBalance() != null && passedObject.getMinimumBalance().isPresent()) {
-            if (GenericValidator.isDouble(passedObject.getMinimumBalance().get())) {
-                newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance().get())));
+        if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
+            if (GenericValidator.isDouble(passedObject.getMinimumBalance())) {
+                newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance())));
             } else {
                 return new ResponseEntity<>("Invalid input for minimum balance. Please provide numeric data",
                         HttpStatus.NOT_ACCEPTABLE);
@@ -169,7 +188,7 @@ public class AccountService {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ENGLISH);
             formatter = formatter.withLocale(Locale.ENGLISH);
-            LocalDate birthDate = LocalDate.parse(primaryOwner.get().getDateOfBirth(), formatter);
+            LocalDate birthDate = primaryOwner.get().getDateOfBirth();
             LocalDate today     = LocalDate.now();
             int       years     = Period.between(birthDate, today).getYears();
             String accountType = (years < 24) ?  "STUDENT_CHECKING" : "CHECKING";
@@ -181,12 +200,12 @@ public class AccountService {
                 Checking newAccount = new Checking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
                     return new ResponseEntity<>("Starting balance for checking account cannot be lower than minimum balance.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -203,12 +222,12 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         try {
-                            newAccount.setCreationDate((Date) formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate((Date) formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -223,16 +242,16 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
 
-                if (passedObject.getMonthlyMaintenanceFee() != null && passedObject.getMonthlyMaintenanceFee().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getMonthlyMaintenanceFee().get())) {
-                        newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(passedObject.getMonthlyMaintenanceFee().get())));
+                if (passedObject.getMonthlyMaintenanceFee() != null && !passedObject.getMonthlyMaintenanceFee().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getMonthlyMaintenanceFee())) {
+                        newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(passedObject.getMonthlyMaintenanceFee())));
                     } else {
                         return new ResponseEntity<>("Invalid input for Monthly Maintenance Fee. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -241,9 +260,9 @@ public class AccountService {
                     newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(12)));
                 }
 
-                if (passedObject.getMinimumBalance() != null && passedObject.getMinimumBalance().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getMinimumBalance().get())) {
-                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance().get())));
+                if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getMinimumBalance())) {
+                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance())));
                     } else {
                         return new ResponseEntity<>("Invalid input for minimum balance. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -263,12 +282,12 @@ public class AccountService {
                 StudentChecking newAccount = new StudentChecking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("0")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("0")) {
                     return new ResponseEntity<>("Starting balance for student checking account cannot be lower than 0.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -285,12 +304,12 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         try {
-                            newAccount.setCreationDate((Date) formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate((Date) formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -305,9 +324,9 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -329,12 +348,12 @@ public class AccountService {
                 CreditCard newAccount = new CreditCard();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
                     return new ResponseEntity<>("Starting balance for credit card account cannot be lower than credit.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -351,13 +370,13 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                         try {
-                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -372,16 +391,16 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
-                if (passedObject.getInterestRate() != null && passedObject.getInterestRate().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getInterestRate().get())) {
-                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getInterestRate().get()), 0.100000, 0.20000)) {
-                            newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate().get()));
+                if (passedObject.getInterestRate() != null && !passedObject.getInterestRate().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getInterestRate())) {
+                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getInterestRate()), 0.100000, 0.20000)) {
+                            newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate()));
                         } else {
                             return new ResponseEntity<>("Interest rate must be in range from 0.1 to 0.2",
                                     HttpStatus.NOT_ACCEPTABLE);
@@ -396,10 +415,10 @@ public class AccountService {
                 }
 
 
-                if (passedObject.getCreditLimit() != null && passedObject.getCreditLimit().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getCreditLimit().get())) {
-                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getCreditLimit().get()), 100, 100000)) {
-                            newAccount.setCreditLimit(new Money(new BigDecimal(passedObject.getCreditLimit().get())));
+                if (passedObject.getCreditLimit() != null && !passedObject.getCreditLimit().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getCreditLimit())) {
+                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getCreditLimit()), 100, 100000)) {
+                            newAccount.setCreditLimit(new Money(new BigDecimal(passedObject.getCreditLimit())));
                         } else {
                             return new ResponseEntity<>("Credit limit must be in range from 100 to 100 000",
                                     HttpStatus.NOT_ACCEPTABLE);
@@ -451,7 +470,7 @@ public class AccountService {
         if (accountType.equals("CHECKING")) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             formatter = formatter.withLocale(Locale.ENGLISH);
-            LocalDate birthDate = LocalDate.parse(primaryOwner.get().getDateOfBirth(), formatter);
+            LocalDate birthDate = primaryOwner.get().getDateOfBirth();
             LocalDate today     = LocalDate.now();
             int       years     = Period.between(birthDate, today).getYears();
             if (years < 24) {
@@ -465,12 +484,12 @@ public class AccountService {
                 Savings newAccount = new Savings();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
                     return new ResponseEntity<>("Starting balance for savings account must be numeric and cannot be lower than minimum balance.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Minimum balance must be provided.",
@@ -487,13 +506,13 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                         try {
-                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -508,16 +527,16 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
 
-                if (passedObject.getInterestRate() != null && passedObject.getInterestRate().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getInterestRate().get())) {
-                        newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate().get()));
+                if (passedObject.getInterestRate() != null && !passedObject.getInterestRate().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getInterestRate())) {
+                        newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate()));
                     } else {
                         return new ResponseEntity<>("Invalid input for interest rate. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -526,9 +545,9 @@ public class AccountService {
                     newAccount.setInterestRate(new BigDecimal(0.0025));
                 }
 
-                if (passedObject.getMinimumBalance() != null && passedObject.getMinimumBalance().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getMinimumBalance().get())) {
-                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance().get())));
+                if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getMinimumBalance())) {
+                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance())));
                     } else {
                         return new ResponseEntity<>("Invalid input for minimum balance. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -547,12 +566,12 @@ public class AccountService {
                 Checking newAccount = new Checking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
                     return new ResponseEntity<>("Starting balance for checking account cannot be lower than minimum balance.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -569,13 +588,13 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                         try {
-                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -590,16 +609,16 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
 
-                if (passedObject.getMonthlyMaintenanceFee() != null && passedObject.getMonthlyMaintenanceFee().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getMonthlyMaintenanceFee().get())) {
-                        newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(passedObject.getMonthlyMaintenanceFee().get())));
+                if (passedObject.getMonthlyMaintenanceFee() != null && !passedObject.getMonthlyMaintenanceFee().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getMonthlyMaintenanceFee())) {
+                        newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(passedObject.getMonthlyMaintenanceFee())));
                     } else {
                         return new ResponseEntity<>("Invalid input for Monthly Maintenance Fee. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -608,9 +627,9 @@ public class AccountService {
                     newAccount.setMonthlyMaintenanceFee(new Money(new BigDecimal(12)));
                 }
 
-                if (passedObject.getMinimumBalance() != null && passedObject.getMinimumBalance().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getMinimumBalance().get())) {
-                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance().get())));
+                if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getMinimumBalance())) {
+                        newAccount.setMinimumBalance(new Money(new BigDecimal(passedObject.getMinimumBalance())));
                     } else {
                         return new ResponseEntity<>("Invalid input for minimum balance. Please provide numeric data",
                                 HttpStatus.NOT_ACCEPTABLE);
@@ -630,12 +649,12 @@ public class AccountService {
                 StudentChecking newAccount = new StudentChecking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("0")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("0")) {
                     return new ResponseEntity<>("Starting balance for student checking account cannot be lower than 0.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -652,13 +671,13 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                         try {
-                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -673,9 +692,9 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -689,12 +708,12 @@ public class AccountService {
                 CreditCard newAccount = new CreditCard();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance().get()) || Long.parseLong(passedObject.getBalance().get()) < Long.parseLong("100")) {
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
                     return new ResponseEntity<>("Starting balance for credit card account cannot be lower than credit.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {
-                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance().get()))));
+                        newAccount.setBalance(new Money(new BigDecimal(String.valueOf(passedObject.getBalance()))));
                     } catch (Exception e) {
                         e.printStackTrace();
                         return new ResponseEntity<>("Balance must be provided as a valid number.",
@@ -711,13 +730,13 @@ public class AccountService {
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
-                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate().get())) {
+                if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(new Date());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate().get(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
                         try {
-                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate().get()));
+                            newAccount.setCreationDate(formatter.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
                             return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
@@ -732,16 +751,16 @@ public class AccountService {
                 newAccount.setStatus(Status.ACTIVE);
 
                 newAccount.setPrimaryOwner(primaryOwner.get());
-                if (passedObject.getSecondaryOwnerName() != null && passedObject.getSecondaryOwnerName().isPresent()) {
+                if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName().get());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
-                if (passedObject.getInterestRate() != null && passedObject.getInterestRate().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getInterestRate().get())) {
-                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getInterestRate().get()), 0.100000, 0.20000)) {
-                            newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate().get()));
+                if (passedObject.getInterestRate() != null && !passedObject.getInterestRate().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getInterestRate())) {
+                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getInterestRate()), 0.100000, 0.20000)) {
+                            newAccount.setInterestRate(new BigDecimal(passedObject.getInterestRate()));
                         } else {
                             return new ResponseEntity<>("Interest rate must be in range from 0.1 to 0.2",
                                     HttpStatus.NOT_ACCEPTABLE);
@@ -756,10 +775,10 @@ public class AccountService {
                 }
 
 
-                if (passedObject.getCreditLimit() != null && passedObject.getCreditLimit().isPresent()) {
-                    if (GenericValidator.isDouble(passedObject.getCreditLimit().get())) {
-                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getCreditLimit().get()), 100, 100000)) {
-                            newAccount.setCreditLimit(new Money(new BigDecimal(passedObject.getCreditLimit().get())));
+                if (passedObject.getCreditLimit() != null && !passedObject.getCreditLimit().isEmpty()) {
+                    if (GenericValidator.isDouble(passedObject.getCreditLimit())) {
+                        if (GenericValidator.isInRange(Double.parseDouble(passedObject.getCreditLimit()), 100, 100000)) {
+                            newAccount.setCreditLimit(new Money(new BigDecimal(passedObject.getCreditLimit())));
                         } else {
                             return new ResponseEntity<>("Credit limit must be in range from 100 to 100 000",
                                     HttpStatus.NOT_ACCEPTABLE);

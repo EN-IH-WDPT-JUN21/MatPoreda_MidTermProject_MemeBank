@@ -57,7 +57,11 @@ public class AccountController {
     }
 
     @PostMapping("/accounts")
-    public ResponseEntity<?> store(@RequestBody @Valid CreateAccountDTO passedObject) {
+    public ResponseEntity<?> store(@RequestBody CreateAccountDTO passedObject) {
+
+        if(Objects.isNull(passedObject)){
+            return new ResponseEntity<>("Post request must provide valid body.",HttpStatus.NOT_ACCEPTABLE);
+        }
 
         //check if primary owner is provided
         if (GenericValidator.isBlankOrNull(passedObject.getPrimaryOwnerName())){
@@ -82,7 +86,7 @@ public class AccountController {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if(accountType.equals("CHECKING") || accountType.equals("CHECKING")){
+        if(accountType.equals("CHECKING") || accountType.equals("STUDENT_CHECKING")){
             accountType="CHECKING";
         }
 

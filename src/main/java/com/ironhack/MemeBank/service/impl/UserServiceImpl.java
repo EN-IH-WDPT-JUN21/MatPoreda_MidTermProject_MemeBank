@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,9 +141,9 @@ public class UserServiceImpl implements UserService {
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
                     } else{localAccountHolder.setName(passedObject.getName());}
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || GenericValidator.isDate(passedObject.getDateOfBirth(), "dd-MM-yyyy", true)){
-                        return new ResponseEntity<>("Date of birth cannot be empty and must be provided in dd-MM-yyyy format", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localAccountHolder.setDateOfBirth(passedObject.getDateOfBirth());}
+                    if(GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true)){
+                        return new ResponseEntity<>("Date of birth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
+                    } else{localAccountHolder.setDateOfBirth(LocalDate.parse(passedObject.getDateOfBirth()));}
 
 //                   if(passedObject.getPrimaryAddress().getPrimaryAddress().isEmpty()){
 //                        return new ResponseEntity<>("Primary address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);

@@ -21,12 +21,12 @@ import java.util.Optional;
 @Getter
 @Setter
 public class TransactionDTO {
-    private Optional<String> date;
-    private Optional<String> description;
-    private Optional<String> type;
-    private Optional<String> status;
-    private Optional<String> amount;
-    private Optional<String> availableBalance;
-    private Optional<String> accountId;
-    private Optional<String> secretKey;
+    private LocalDateTime date;
+    private String description;
+    private String type;
+    private String status;
+    private String amount;
+    private String availableBalance;
+    private String accountId;
+    private String secretKey;
 }
