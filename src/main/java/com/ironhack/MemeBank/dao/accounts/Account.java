@@ -39,7 +39,7 @@ public abstract class Account {
     private Money balance;
 
 //    @Embedded
-    private byte[] secretKey;
+    private String secretKey;
     private byte[] salt;
 
     @Embedded

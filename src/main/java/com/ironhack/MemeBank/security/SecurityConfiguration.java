@@ -29,22 +29,22 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-        @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser("admin").password(passwordEncoder.encode("123456")).roles("ADMIN", "USER")
-                .and()
-                .withUser("user").password(passwordEncoder.encode("123456")).roles("USER");
-
-    }
-
-//    @Override
-//    protected void configure(AuthenticationManagerBuilder auth) throws Exception{
+//        @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 //        auth
-//                .userDetailsService(customUserDetailsService)
-//                .passwordEncoder(passwordEncoder);
+//                .inMemoryAuthentication()
+//                .withUser("admin").password(passwordEncoder.encode("123456")).roles("ADMIN", "USER")
+//                .and()
+//                .withUser("user").password(passwordEncoder.encode("123456")).roles("USER");
+//
 //    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception{
+        auth
+                .userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder);
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception{
@@ -52,11 +52,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.httpBasic();
         http.csrf().disable();
         http.authorizeRequests()
-                .mvcMatchers(HttpMethod.GET, "/hello-world").authenticated()
+                .mvcMatchers(HttpMethod.GET, "/accounts").authenticated()
                 .mvcMatchers(HttpMethod.GET, "/users").authenticated()
                 .mvcMatchers(HttpMethod.GET, "/checkings").authenticated()
                 .mvcMatchers(HttpMethod.GET, "/products/**").hasAnyRole("ADMIN", "USER")
                 .mvcMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN", "TECHNICIAN", "USER")
+
+                .mvcMatchers(HttpMethod.POST, "/accounts").authenticated()
+                .mvcMatchers(HttpMethod.POST, "/users").authenticated()
+                .mvcMatchers(HttpMethod.POST, "/third_party/transactions").authenticated()
                 .anyRequest().permitAll();
     }
 

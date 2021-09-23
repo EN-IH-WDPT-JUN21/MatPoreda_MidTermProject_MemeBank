@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +46,13 @@ public class UserController {
 
     @Autowired
     private RoleRepository roleRepository;
+
+//    @RequestMapping(value = "/username", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String currentUserNameSimple(HttpServletRequest request) {
+//        Principal principal = request.getUserPrincipal();
+//        return principal.getName();
+//    }
 
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)

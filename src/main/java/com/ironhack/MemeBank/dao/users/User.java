@@ -33,16 +33,6 @@ public class User {
     @JsonIgnore
     private String password;
 
-//    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade=CascadeType.ALL)
-//    @JsonIgnore
-//    private Set<Role> roles;
-//
-//    public User(String username, String password, Set<Role> roles) {
-//        this.username = username;
-//        this.password = password;
-//        this.roles = roles;
-//    }
-
     @JsonBackReference
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(name="role_id")

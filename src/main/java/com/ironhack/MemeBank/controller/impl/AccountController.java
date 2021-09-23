@@ -16,6 +16,7 @@ import com.ironhack.MemeBank.repository.*;
 import com.ironhack.MemeBank.security.Passwords;
 import com.ironhack.MemeBank.security.SecretKey;
 import com.ironhack.MemeBank.service.impl.AccountService;
+import com.ironhack.MemeBank.service.impl.UserServiceImpl;
 import com.ironhack.MemeBank.service.interfaces.UserService;
 import org.apache.commons.validator.GenericValidator;
 import org.slf4j.Logger;
@@ -48,9 +49,21 @@ public class AccountController {
     @Autowired
     AccountService accountService;
 
+    @Autowired
+    UserServiceImpl userServiceImpl;
+
+    @Autowired
+    UserRepository userRepository;
+
 
 
     @GetMapping("/accounts")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Account> getAccounts() {
+        return accountRepository.findByPrimaryOwnerOrSecondOwner(String.valueOf(userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get()));
+    }
+
+    @GetMapping("/accounts/all")
     @ResponseStatus(HttpStatus.OK)
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();

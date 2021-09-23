@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -169,7 +171,7 @@ public class UserServiceImpl implements UserService {
                     var salt     = Passwords.getNextSalt();
                     var password = localThirdParty.getPassword().toCharArray();
                     var secretKey=Passwords.hash(password, salt);
-                    localThirdParty.setHashKey(secretKey);
+                    localThirdParty.setHashKey(String.valueOf(secretKey));
                     localThirdParty.setSalt(salt);
 
                     if(GenericValidator.isBlankOrNull(passedObject.getName())){
@@ -182,6 +184,15 @@ public class UserServiceImpl implements UserService {
         }
         return new ResponseEntity<>("New ".concat(role).concat(" created"),
                 HttpStatus.CREATED);
+    }
+
+    public String getCurrentUsername() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            return  principal.toString();
+        }
     }
 
 //    public void enableUser (String username) {

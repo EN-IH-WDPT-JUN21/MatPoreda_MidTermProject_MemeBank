@@ -66,6 +66,11 @@ public class AccountService {
         return transactionRepository.findLastTransactionWithGivenMonthAndTypeAndAccountId(account.getId(), 5, currentTransaction.getDate()).isPresent();
     };
 
+    public boolean checkIfAccrualIsApplicable(Account account, Transaction currentTransaction){
+        return transactionRepository.findLastTransactionWithGivenMonthAndTypeAndAccountId(account.getId(), 5, currentTransaction.getDate()).isPresent();
+    };
+
+
     public Money findMinimumBalance(Account account) {
         if (checkingRepository.findById(account.getId()).isPresent()) {
             return checkingRepository.findById(account.getId()).get().getMinimumBalance();
@@ -109,7 +114,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(secretKey);
+                newAccount.setSecretKey(String.valueOf(secretKey));
                 newAccount.setSalt(salt);
 
         newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -217,7 +222,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(secretKey);
+                newAccount.setSecretKey(String.valueOf(secretKey));
                 newAccount.setSalt(salt);
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -299,7 +304,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(secretKey);
+                newAccount.setSecretKey(String.valueOf(secretKey));
                 newAccount.setSalt(salt);
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -365,7 +370,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(secretKey);
+                newAccount.setSecretKey(String.valueOf(secretKey));
                 newAccount.setSalt(salt);
 
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));

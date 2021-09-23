@@ -2,6 +2,7 @@ package com.ironhack.MemeBank.dao;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.MemeBank.dao.accounts.Account;
+import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.enums.TransactionStatus;
 import com.ironhack.MemeBank.enums.TransactionType;
 import lombok.AllArgsConstructor;
@@ -30,11 +31,20 @@ public class Transaction {
     private TransactionType type;
     private TransactionStatus status;
     private Money amount;
-    private BigDecimal availableBalance;
+//    private BigDecimal availableBalance;
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=true)
     @JsonIgnore
     private Account account;
     private String responseStatus;
+    @ManyToOne(cascade=CascadeType.ALL)
+    @JoinColumn(nullable=true)
+    @JsonIgnore
+    private Account transactionInitiatorAccount;
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(nullable=true)
+    @JsonIgnore
+    private User transactionInitiator;
+
 
 }

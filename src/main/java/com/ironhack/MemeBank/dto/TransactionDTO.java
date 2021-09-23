@@ -29,4 +29,9 @@ public class TransactionDTO {
     private String availableBalance;
     private String accountId;
     private String secretKey;
+    private String transactionInitiatorAccountId;
+    private String transactionInitiatorUserId;
+    private String hashKey;
+    private String ownerName;
+
 }
