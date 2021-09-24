@@ -139,9 +139,9 @@ public class UserServiceImpl implements UserService {
                     localAccountHolder.setPassword(securityConfiguration.passwordEncoder()
                             .encode(passedObject.getPassword()));
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getName())){
+                    if(GenericValidator.isBlankOrNull(passedObject.getUsername())){
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localAccountHolder.setName(passedObject.getName());}
+                    } else{localAccountHolder.setUsername(passedObject.getUsername());}
 
                     if(GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true)){
                         return new ResponseEntity<>("Date of birth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
@@ -174,9 +174,9 @@ public class UserServiceImpl implements UserService {
                     localThirdParty.setHashKey(String.valueOf(secretKey));
                     localThirdParty.setSalt(salt);
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getName())){
+                    if(GenericValidator.isBlankOrNull(passedObject.getUsername())){
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localThirdParty.setName(passedObject.getName());}
+                    } else{localThirdParty.setUsername(passedObject.getUsername());}
                     thirdPartyRepository.save(localThirdParty);
                     break;
                 }

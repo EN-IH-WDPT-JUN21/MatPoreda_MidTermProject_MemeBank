@@ -14,7 +14,7 @@ import javax.persistence.Table;
 @AllArgsConstructor
 @Table(name="third_party")
 public class ThirdParty extends User{
-    private String name;
+//    private String name;
     private String hashKey;
     private byte[] salt;
 

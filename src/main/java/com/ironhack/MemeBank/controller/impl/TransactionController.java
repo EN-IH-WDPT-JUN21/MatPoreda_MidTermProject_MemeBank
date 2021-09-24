@@ -160,13 +160,17 @@ public class TransactionController {
     }
 
 
-    @PostMapping("/transactions/{account_id}")
-    public ResponseEntity<?> store(@RequestBody TransactionDTO passedObject, @PathVariable(name="account_id") long accountId) {
+    @PostMapping("/transactions/{id}")
+    public ResponseEntity<?> store(@RequestBody TransactionDTO passedObject, @PathVariable(name="id") String accountId) {
 
-        if (GenericValidator.isBlankOrNull(String.valueOf(accountId)) || GenericValidator.isLong(String.valueOf(accountId))){
+
+
+
+        if (GenericValidator.isBlankOrNull(accountId) || !GenericValidator.isLong(accountId)){
             return new ResponseEntity<>("Your Account ID must be provided as a valid long",
                     HttpStatus.NOT_ACCEPTABLE);
-        } else if (accountRepository.findById(Long.valueOf(String.valueOf(accountId))).isEmpty() || !accountHolderRepository.findByName(userServiceImpl.getCurrentUsername()).get().getPrimaryOwnedAccounts().contains(accountRepository.findById(Long.valueOf(String.valueOf(accountId))))) {
+        } else if (accountRepository.findById(Long.valueOf(accountId)).isEmpty()
+                || !userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get().getPrimaryOwnedAccounts().contains(accountRepository.findById(Long.valueOf(accountId)).get())) {
             return new ResponseEntity<>("You cannot transfer funds from this account",
                     HttpStatus.NOT_ACCEPTABLE);
         }
@@ -187,72 +191,65 @@ public class TransactionController {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getOwnerName())) || accountRepository.findByPrimaryOwnerOrSecondOwner(passedObject.getOwnerName()).isEmpty()) {
+
+        if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getOwnerName())) || userRepository.findByUsername(passedObject.getOwnerName()).isEmpty()) {
             return new ResponseEntity<>("Target Account owner name must be provided and valid",
                     HttpStatus.NOT_ACCEPTABLE);
-        } else if (!accountRepository.findByPrimaryOwnerOrSecondOwner(passedObject.getOwnerName()).contains(accountRepository.findById(Long.valueOf(passedObject.getAccountId())))) {
+//        } else if (!accountRepository.findByPrimaryOwnerOrSecondaryOwner(userRepository.findByUsername(passedObject.getOwnerName()).get(), userRepository.findByUsername(passedObject.getOwnerName()).get()).contains(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get())) {
+        } else if (accountRepository.findByPrimaryOwnerOrSecondaryOwner(userRepository.findByUsername(passedObject.getOwnerName()).get(), userRepository.findByUsername(passedObject.getOwnerName()).get()).contains(passedObject.getAccountId().isEmpty())) {
             return new ResponseEntity<>("Account ID and account owner name does not match",
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-
-
         Transaction newTransaction = new Transaction();
-        newTransaction.setAccount(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
-        Money balance           = accountService.checkAccountBalance(newTransaction.getAccount());
+        Account donorAccount=accountRepository.findById(Long.valueOf(accountId)).get();
+        Account targetAccount=accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get();
+        newTransaction.setAccount(targetAccount);
+        Money balance           = accountService.checkAccountBalance(donorAccount);
         Money transactionVolume = new Money(new BigDecimal(passedObject.getAmount()));
         newTransaction.setDescription(passedObject.getDescription());
         newTransaction.setDate(LocalDateTime.now());
         newTransaction.setAmount(new Money(new BigDecimal(passedObject.getAmount())));
-        Account donorAccount=accountRepository.findById(Long.valueOf(accountId)).get();
+
+
+
 
         if(donorAccount.getBalance().getAmount().compareTo(transactionVolume.getAmount())<0){
             return new ResponseEntity<>("Insufficient funds on given account",
                     HttpStatus.NOT_ACCEPTABLE);
-        }
-
-        newTransaction.setTransactionInitiator(userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get());
-        newTransaction.setTransactionInitiatorAccount(donorAccount);
-
-        if (transactionVolume.getAmount().compareTo(new BigDecimal(0)) < 0) {
-            newTransaction.setType(TransactionType.CHARGE);
-        } else {
-            newTransaction.setType(TransactionType.TRANSFER);
-        }
-
-        BigDecimal newBalance     = new BigDecimal(String.valueOf(balance.getAmount().add(transactionVolume.getAmount())));
-        Money      minimumBalance = accountService.findMinimumBalance(newTransaction.getAccount());
-        Money       penaltyFeeVol = new Money(transactionService.newPenaltyFee(newTransaction.getAccount()).getAmount().getAmount());
-
-        if (newBalance.compareTo(new BigDecimal(0)) < 0 && newTransaction.getType().equals(TransactionType.CHARGE)) {
-            newTransaction.setStatus(TransactionStatus.DENIED);
-            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Transaction volume exceeded account balance. Transaction was denied", HttpStatus.NOT_ACCEPTABLE)));
-            transactionRepository.save(newTransaction);
-            return new ResponseEntity<>("Transaction volume exceeded account balance. Transaction was denied",
-                    HttpStatus.NOT_ACCEPTABLE);
-        } else
-        //(newBalance.compareTo(new BigDecimal(0)) <= 0 && newTransaction.getType().equals(TransactionType.CHARGE))
-        {
+        }else{
             newTransaction.setStatus(TransactionStatus.ACCEPTED);
-            newTransaction.getAccount().setBalance(new Money(balance.increaseAmount(transactionVolume.getAmount())));
-            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Transaction was successful", HttpStatus.OK)));
-            newTransaction.setAccount(accountRepository.save(newTransaction.getAccount()));
-            transactionRepository.save(newTransaction);
+        }
+
+        newTransaction.setTransactionInitiator(donorAccount.getPrimaryOwner());
+        newTransaction.setTransactionInitiatorAccount(donorAccount);
+        newTransaction.setType(TransactionType.TRANSFER);
+
+        BigDecimal newBalance     = donorAccount.getBalance().getAmount().subtract(transactionVolume.getAmount());
+        Money      minimumBalance = accountService.findMinimumBalance(donorAccount);
+
+        donorAccount.setBalance(new Money(newBalance));
+        accountRepository.save(donorAccount);
+
+        targetAccount.setBalance(new Money(targetAccount.getBalance().increaseAmount(transactionVolume.getAmount())));
+        newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Transaction was successful", HttpStatus.OK)));
+        newTransaction.setAccount(accountRepository.save(targetAccount));
+        transactionRepository.save(newTransaction);
 
             //apply penalty fee
-            if (newBalance.compareTo(minimumBalance.getAmount()) < 0 && !accountService.checkLastpenaltyFee(newTransaction.getAccount(), newTransaction)) {
-                Transaction newPenaltyFee = transactionService.newPenaltyFee(newTransaction.getAccount());
-
-                newPenaltyFee.getAccount().setBalance(new Money(balance.increaseAmount(penaltyFeeVol)));
+            if (newBalance.compareTo(minimumBalance.getAmount()) < 0 && !accountService.checkLastpenaltyFee(donorAccount, newTransaction)) {
+                Transaction newPenaltyFee = transactionService.newPenaltyFee(donorAccount);
+                Money       penaltyFeeVol = new Money(transactionService.newPenaltyFee(donorAccount).getAmount().getAmount());
+                newBalance = donorAccount.getBalance().getAmount().add(penaltyFeeVol.getAmount());
+                newPenaltyFee.getAccount().setBalance(new Money(newBalance));
                 newPenaltyFee.setResponseStatus(String.valueOf(new ResponseEntity<>("Transaction was successful", HttpStatus.OK)));
                 newPenaltyFee.setAccount(accountRepository.save(newPenaltyFee.getAccount()));
                 transactionRepository.save(newPenaltyFee);
             }
-
             return new ResponseEntity<>("Transaction was proceeded successfully",
                     HttpStatus.OK);
         }
     }
-    }
+
 
 

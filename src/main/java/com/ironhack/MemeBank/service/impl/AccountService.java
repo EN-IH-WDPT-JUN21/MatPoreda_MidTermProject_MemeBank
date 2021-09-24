@@ -88,7 +88,7 @@ public class AccountService {
         if (GenericValidator.isBlankOrNull(passedObject.getPrimaryOwnerName())) {
             return new ResponseEntity<>("Primary owner must be specified.", HttpStatus.NOT_ACCEPTABLE);
         }
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByName(passedObject.getPrimaryOwnerName());
+        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByUsername(passedObject.getPrimaryOwnerName());
         if (primaryOwner.isEmpty()) {
             return new ResponseEntity<>("User with name ".concat(passedObject.getPrimaryOwnerName()).concat(" does not exist! Please create user first!"),
                     HttpStatus.NOT_ACCEPTABLE);
@@ -142,7 +142,7 @@ public class AccountService {
         newAccount.setPrimaryOwner(primaryOwner.get());
         if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
             secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
         }
 
@@ -184,7 +184,7 @@ public class AccountService {
         if (GenericValidator.isBlankOrNull(passedObject.getPrimaryOwnerName())) {
             return new ResponseEntity<>("Primary owner must be specified.", HttpStatus.NOT_ACCEPTABLE);
         }
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByName(passedObject.getPrimaryOwnerName());
+        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByUsername(passedObject.getPrimaryOwnerName());
         if (primaryOwner.isEmpty()) {
             return new ResponseEntity<>("User with name ".concat(passedObject.getPrimaryOwnerName()).concat(" does not exist! Please create user first!"),
                     HttpStatus.NOT_ACCEPTABLE);
@@ -249,7 +249,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -331,7 +331,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -348,7 +348,7 @@ public class AccountService {
     }
 
     public ResponseEntity<?> storeCreditCard(@Valid CreateAccountDTO passedObject) {
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByName(passedObject.getPrimaryOwnerName());
+        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByUsername(passedObject.getPrimaryOwnerName());
 
                 CreditCard newAccount = new CreditCard();
                 if (passedObject.getBalance().isEmpty()) {
@@ -398,7 +398,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -450,7 +450,7 @@ public class AccountService {
         if (GenericValidator.isBlankOrNull(passedObject.getPrimaryOwnerName())) {
             return new ResponseEntity<>("Primary owner must be specified.", HttpStatus.NOT_ACCEPTABLE);
         }
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByName(passedObject.getPrimaryOwnerName());
+        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByUsername(passedObject.getPrimaryOwnerName());
         if (primaryOwner.isEmpty()) {
             return new ResponseEntity<>("User with name ".concat(passedObject.getPrimaryOwnerName()).concat(" does not exist! Please create user first!"),
                     HttpStatus.NOT_ACCEPTABLE);
@@ -534,7 +534,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -616,7 +616,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -699,7 +699,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 
@@ -758,7 +758,7 @@ public class AccountService {
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByName(passedObject.getSecondaryOwnerName());
+                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
 

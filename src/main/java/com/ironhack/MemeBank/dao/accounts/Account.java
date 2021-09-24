@@ -1,5 +1,6 @@
 package com.ironhack.MemeBank.dao.accounts;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
@@ -63,6 +64,7 @@ public abstract class Account {
     private User secondaryOwner;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Transaction> transactionList= new HashSet<>();
 
 }

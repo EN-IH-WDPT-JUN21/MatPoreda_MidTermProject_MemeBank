@@ -60,7 +60,7 @@ public class AccountController {
     @GetMapping("/accounts")
     @ResponseStatus(HttpStatus.OK)
     public List<Account> getAccounts() {
-        return accountRepository.findByPrimaryOwnerOrSecondOwner(String.valueOf(userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get()));
+        return accountRepository.findByPrimaryOwnerOrSecondaryOwner(userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get(),userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get());
     }
 
     @GetMapping("/accounts/all")
@@ -79,7 +79,7 @@ public class AccountController {
         //check if primary owner is provided
         if (GenericValidator.isBlankOrNull(passedObject.getPrimaryOwnerName())){
             return new ResponseEntity<>("Primary owner must be specified.",HttpStatus.NOT_ACCEPTABLE);}
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByName(passedObject.getPrimaryOwnerName());
+        Optional<AccountHolder> primaryOwner = accountHolderRepository.findByUsername(passedObject.getPrimaryOwnerName());
         if(primaryOwner.isEmpty()){
             return new ResponseEntity<>("User with name ".concat(passedObject.getPrimaryOwnerName()).concat(" does not exist! Please create user first!"),
                     HttpStatus.NOT_ACCEPTABLE);
