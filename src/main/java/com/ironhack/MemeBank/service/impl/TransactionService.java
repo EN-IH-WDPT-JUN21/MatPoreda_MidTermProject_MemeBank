@@ -4,7 +4,6 @@ import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.accounts.Account;
 import com.ironhack.MemeBank.dao.users.ThirdParty;
-import com.ironhack.MemeBank.dto.CreateAccountDTO;
 import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.enums.TransactionStatus;
@@ -16,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
+
 @Service
 public class TransactionService {
 
@@ -52,7 +53,7 @@ public class TransactionService {
         newTransaction.setAmount(new Money(new BigDecimal(0).subtract(account.getPenaltyFee().getAmount())));
         newTransaction.setDate(LocalDateTime.now());
         newTransaction.setDescription("Penalty for reaching the account limit");
-        newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("PenaltyFee Applied",
+        newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("PenaltyFee Applied",
                 HttpStatus.CREATED)));
         newTransaction.setTransactionInitiator(null);
         newTransaction.setTransactionInitiatorAccount(null);
@@ -70,7 +71,6 @@ public class TransactionService {
                     YearMonth.from(calculationDate),
                     YearMonth.from(LocalDateTime.now())
             );
-            long daysBetween =ChronoUnit.DAYS.between(calculationDate, LocalDate.now());
             if (Math.floor((int) monthsBetween) >= 1
                     //check if last fee was in last month
                     && ChronoUnit.DAYS.between(calculationDate, LocalDate.now())>=LocalDate.now().lengthOfMonth()
@@ -87,7 +87,7 @@ public class TransactionService {
                     LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
                     newTransaction.setDate(transactionDate.atStartOfDay());
                     newTransaction.setDescription("Monthly maintenance fee");
-                    newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Monthly maintenance fee applied",
+                    newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Monthly maintenance fee applied",
                             HttpStatus.CREATED)));
                     newTransaction.setTransactionInitiator(null);
                     newTransaction.setTransactionInitiatorAccount(null);
@@ -112,8 +112,6 @@ public class TransactionService {
                     YearMonth.from(calculationDate),
                     YearMonth.from(LocalDateTime.now())
             );
-            long daysBetween = ChronoUnit.DAYS.between(calculationDate, LocalDate.now());
-
             switch (accountType) {
                 case SAVINGS: {
                     if (Math.floor((int) monthsBetween) >= 12
@@ -133,7 +131,7 @@ public class TransactionService {
                             LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
                             newTransaction.setDate(transactionDate.atStartOfDay());
                             newTransaction.setDescription("Interest rates accrual");
-                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Interest rates accrual applied",
+                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Interest rates accrual applied",
                                     HttpStatus.CREATED)));
                             newTransaction.setTransactionInitiator(null);
                             newTransaction.setTransactionInitiatorAccount(null);
@@ -164,7 +162,7 @@ public class TransactionService {
                             LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
                             newTransaction.setDate(transactionDate.atStartOfDay());
                             newTransaction.setDescription("Interest rates accrual");
-                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Interest rates accrual applied",
+                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<>("Interest rates accrual applied",
                                     HttpStatus.CREATED)));
                             newTransaction.setTransactionInitiator(null);
                             newTransaction.setTransactionInitiatorAccount(null);
@@ -180,9 +178,7 @@ public class TransactionService {
 
     public ResponseEntity<?> storeTransaction(@Valid TransactionDTO passedObject) {
         LocalDateTime     date;
-        String description;
         TransactionType type;
-        TransactionStatus status;
         Money amount;
         BigDecimal        availableBalance;
         Optional<Account> account;
@@ -214,7 +210,7 @@ public class TransactionService {
             newTransaction.setDescription(null);
         }
 
-        if (GenericValidator.isBlankOrNull(passedObject.getType().toString())) {
+        if (GenericValidator.isBlankOrNull(passedObject.getType())) {
             return new ResponseEntity<>("Transaction type must be provided",
                     HttpStatus.NOT_ACCEPTABLE);
         }
@@ -224,7 +220,7 @@ public class TransactionService {
         { if (transactionType.equalsIgnoreCase(t.toString())){ validTransaction=true;}
         }
         if(!validTransaction) {
-            return new ResponseEntity<>("Transaction of type: ".concat(transactionType.toString()).concat(" does not exist."),
+            return new ResponseEntity<>("Transaction of type: ".concat(transactionType).concat(" does not exist."),
                     HttpStatus.NOT_ACCEPTABLE);
         }
         type=TransactionType.valueOf(transactionType);
@@ -275,6 +271,6 @@ public class TransactionService {
             }
 
         }
-        return account;
+        return null;
     }
 }

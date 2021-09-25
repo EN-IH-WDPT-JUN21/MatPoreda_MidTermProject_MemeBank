@@ -9,13 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
 import javax.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -31,16 +26,18 @@ public class Transaction {
     private TransactionType type;
     private TransactionStatus status;
     private Money amount;
-//    private BigDecimal availableBalance;
+
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=true)
     @JsonIgnore
     private Account account;
     private String responseStatus;
+
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=true)
     @JsonIgnore
     private Account transactionInitiatorAccount;
+
     @OneToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=true)
     @JsonIgnore

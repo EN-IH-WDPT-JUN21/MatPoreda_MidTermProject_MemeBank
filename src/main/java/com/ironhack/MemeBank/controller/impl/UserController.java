@@ -1,16 +1,10 @@
 package com.ironhack.MemeBank.controller.impl;
 
-import com.ironhack.MemeBank.dao.Role;
-import com.ironhack.MemeBank.dao.users.AccountHolder;
-import com.ironhack.MemeBank.dao.users.Admin;
-import com.ironhack.MemeBank.dao.users.ThirdParty;
 import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.CreateUserDTO;
-import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.repository.*;
 import com.ironhack.MemeBank.service.impl.UserServiceImpl;
 import com.ironhack.MemeBank.service.interfaces.UserService;
-import org.apache.commons.validator.GenericValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 public class UserController {
@@ -46,13 +37,6 @@ public class UserController {
 
     @Autowired
     private RoleRepository roleRepository;
-
-//    @RequestMapping(value = "/username", method = RequestMethod.GET)
-//    @ResponseBody
-//    public String currentUserNameSimple(HttpServletRequest request) {
-//        Principal principal = request.getUserPrincipal();
-//        return principal.getName();
-//    }
 
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)

@@ -6,6 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CheckingRepository extends JpaRepository<Checking, Long> {
-
-//    List<Checking> findByAccountHolder(AccountHolder accountHolder);
 }

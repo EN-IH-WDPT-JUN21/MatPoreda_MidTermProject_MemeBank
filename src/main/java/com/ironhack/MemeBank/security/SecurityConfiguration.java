@@ -1,7 +1,5 @@
 package com.ironhack.MemeBank.security;
 
-
-
 import com.ironhack.MemeBank.service.impl.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +8,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,15 +49,29 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.httpBasic();
         http.csrf().disable();
         http.authorizeRequests()
-                .mvcMatchers(HttpMethod.GET, "/accounts").authenticated()
-                .mvcMatchers(HttpMethod.GET, "/users").authenticated()
-                .mvcMatchers(HttpMethod.GET, "/checkings").authenticated()
-                .mvcMatchers(HttpMethod.GET, "/products/**").hasAnyRole("ADMIN", "USER")
-                .mvcMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN", "TECHNICIAN", "USER")
+                //*********GET********
+                //accounts
+                .mvcMatchers(HttpMethod.GET, "/accounts").authenticated() //return owned accounts
+                .mvcMatchers(HttpMethod.GET, "/accounts/all").hasAnyRole("ADMIN") // return all accounts
+                //transactions
+                .mvcMatchers(HttpMethod.GET, "/transactions").authenticated() //return owned transactions
+                .mvcMatchers(HttpMethod.GET, "/transactions/all").hasAnyRole("ADMIN") // return all transactions
+                //users
+                .mvcMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN")  //return all users
+                .mvcMatchers(HttpMethod.GET, "/users/admins").hasAnyRole("ADMIN") // return all admins
+                .mvcMatchers(HttpMethod.GET, "/users/third_party").hasAnyRole("ADMIN") // return all third_party
+                .mvcMatchers(HttpMethod.GET, "/users/account_holders").hasAnyRole("ADMIN") // return all account_holders
 
-                .mvcMatchers(HttpMethod.POST, "/accounts").authenticated()
-                .mvcMatchers(HttpMethod.POST, "/users").authenticated()
-                .mvcMatchers(HttpMethod.POST, "/third_party/transactions").authenticated()
+                //*********POST********
+                //accounts
+                .mvcMatchers(HttpMethod.POST, "/accounts").hasAnyRole("ADMIN") //create new accounts
+                .mvcMatchers(HttpMethod.POST, "/accounts/set_balance/{id}").hasAnyRole("ADMIN") //modify account balance
+                //transactions
+                .mvcMatchers(HttpMethod.POST, "/transactions/third_party").hasAnyRole("THIRD_PARTY") //create new third_party transaction
+                .mvcMatchers(HttpMethod.POST, "/transactions/{id}").hasAnyRole("ACCOUNT_HOLDER") //transfer funds from owned accounts
+                //users
+                .mvcMatchers(HttpMethod.POST, "/users").hasAnyRole("ADMIN") //create new users
+
                 .anyRequest().permitAll();
     }
 

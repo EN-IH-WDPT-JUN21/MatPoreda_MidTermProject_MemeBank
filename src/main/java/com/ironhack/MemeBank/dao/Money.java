@@ -2,15 +2,10 @@ package com.ironhack.MemeBank.dao;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Table;
-import java.math.RoundingMode;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Currency;
 
 @Embeddable

@@ -12,29 +12,22 @@ import com.ironhack.MemeBank.security.Passwords;
 import com.ironhack.MemeBank.security.SecurityConfiguration;
 import com.ironhack.MemeBank.service.interfaces.UserService;
 import org.apache.commons.validator.GenericValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -54,12 +47,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     SecurityConfiguration securityConfiguration;
 
-
-//    @Autowired
-//    private BCryptPasswordEncoder passwordEncoder;
-
-//    @Autowired
-//    private AccountService accountService;
+    public UserServiceImpl() {
+    }
 
     public void save(User user) {
         userRepository.save(user);
@@ -68,8 +57,6 @@ public class UserServiceImpl implements UserService {
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).get();
     }
-
-
 
     public User saveUser (User user) {
         return userRepository.save(user);
@@ -91,12 +78,8 @@ public class UserServiceImpl implements UserService {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-
         String         role      =passedObject.getRoleType().toUpperCase().replaceAll("\\s+","");
-        Optional<User> localUser = userRepository.findByUsername(passedObject.getUsername());
         Role verifiedRole;
-
-
 
         //Check if user already exists
         if(userRepository.findByUsername(passedObject.getUsername()).isPresent()){
@@ -110,7 +93,7 @@ public class UserServiceImpl implements UserService {
         { if (role.equalsIgnoreCase(r.toString())){ validRole=true;}
         }
         if(!validRole) {
-            return new ResponseEntity<>("Role ".concat(role.toString()).concat(" does not exist."),
+            return new ResponseEntity<>("Role ".concat(role).concat(" does not exist."),
                     HttpStatus.NOT_ACCEPTABLE);
         }else{
             if (roleRepository.findByName(role).isPresent()){
@@ -122,63 +105,58 @@ public class UserServiceImpl implements UserService {
 
             //create specific users
 
-            switch(role){
-                case "ADMIN":{
-                    Admin localAdmin=new Admin();
+            switch (role) {
+                case "ADMIN" -> {
+                    Admin localAdmin = new Admin();
                     localAdmin.setUsername(passedObject.getUsername());
                     localAdmin.setPassword(securityConfiguration.passwordEncoder()
                             .encode(passedObject.getPassword()));
                     localAdmin.setRole(verifiedRole);
                     adminRepository.save(localAdmin);
-                    break;
                 }
-
-                case "ACCOUNT_HOLDER":{
-                    AccountHolder localAccountHolder=new AccountHolder();
+                case "ACCOUNT_HOLDER" -> {
+                    AccountHolder localAccountHolder = new AccountHolder();
                     localAccountHolder.setUsername(passedObject.getUsername());
                     localAccountHolder.setPassword(securityConfiguration.passwordEncoder()
                             .encode(passedObject.getPassword()));
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getUsername())){
+                    if (GenericValidator.isBlankOrNull(passedObject.getUsername())) {
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localAccountHolder.setUsername(passedObject.getUsername());}
+                    } else {
+                        localAccountHolder.setUsername(passedObject.getUsername());
+                    }
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true)){
+                    if (GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true)) {
                         return new ResponseEntity<>("Date of birth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localAccountHolder.setDateOfBirth(LocalDate.parse(passedObject.getDateOfBirth()));}
+                    } else {
+                        localAccountHolder.setDateOfBirth(LocalDate.parse(passedObject.getDateOfBirth()));
+                    }
 
-//                   if(passedObject.getPrimaryAddress().getPrimaryAddress().isEmpty()){
-//                        return new ResponseEntity<>("Primary address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-//                    } else{localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());}
+
                     localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());
-//                    if(passedObject.getPrimaryAddress().getMailingAddress().isEmpty()){
-//                        return new ResponseEntity<>("Mailing address cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-//                    } else{localAccountHolder.setMailingAddress(passedObject.getMailingAddress());}
                     localAccountHolder.setMailingAddress(passedObject.getMailingAddress());
-
                     localAccountHolder.setRole(verifiedRole);
                     accountHolderRepository.save(localAccountHolder);
-
-                    break;
                 }
-                case "THIRD_PARTY":{
-                    ThirdParty localThirdParty =new ThirdParty();
+                case "THIRD_PARTY" -> {
+                    ThirdParty localThirdParty = new ThirdParty();
                     localThirdParty.setUsername(passedObject.getUsername());
                     localThirdParty.setPassword(securityConfiguration.passwordEncoder()
                             .encode(passedObject.getPassword()));
                     localThirdParty.setRole(verifiedRole);
 
-                    var salt     = Passwords.getNextSalt();
-                    var password = localThirdParty.getPassword().toCharArray();
-                    var secretKey=Passwords.hash(password, salt);
-                    localThirdParty.setHashKey(String.valueOf(secretKey));
+                    var salt      = Passwords.getNextSalt();
+                    var password  = localThirdParty.getPassword().toCharArray();
+                    var secretKey = Passwords.hash(password, salt);
+                    localThirdParty.setHashKey(Arrays.toString(secretKey));
                     localThirdParty.setSalt(salt);
 
-                    if(GenericValidator.isBlankOrNull(passedObject.getUsername())){
+                    if (GenericValidator.isBlankOrNull(passedObject.getUsername())) {
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);
-                    } else{localThirdParty.setUsername(passedObject.getUsername());}
+                    } else {
+                        localThirdParty.setUsername(passedObject.getUsername());
+                    }
                     thirdPartyRepository.save(localThirdParty);
-                    break;
                 }
             }
         }
@@ -194,18 +172,4 @@ public class UserServiceImpl implements UserService {
             return  principal.toString();
         }
     }
-
-//    public void enableUser (String username) {
-//        User user = findByUsername(username);
-//        user.setEnabled(true);
-//        userDao.save(user);
-//    }
-
-//    public void disableUser (String username) {
-//        User user = findByUsername(username);
-//        user.setEnabled(false);
-//        System.out.println(user.isEnabled());
-//        userDao.save(user);
-//        System.out.println(username + " is disabled.");
-//    }
 }

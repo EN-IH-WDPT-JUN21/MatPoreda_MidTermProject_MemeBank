@@ -4,14 +4,10 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.MemeBank.dao.Role;
 import com.ironhack.MemeBank.dao.accounts.Account;
-import com.ironhack.MemeBank.repository.RoleRepository;
-import com.ironhack.MemeBank.security.UserRoles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,13 +42,4 @@ public class User {
     @JsonIgnore
     private Set<Account> secondaryOwnedAccounts = new HashSet<>();
 
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//    @JsonIgnore
-//    private Set<UserRoles> userRoles = new HashSet<>();
-
-//    public User(String username, String password, Role role) {
-//        this.username = username;
-//        this.password = password;
-//        this.role = role;
-//    }
 }

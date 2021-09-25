@@ -9,7 +9,6 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 
 @Entity
@@ -26,7 +25,7 @@ public class Savings extends Account {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride( name = "amount", column = @Column(name = "minimum_balance_amount",columnDefinition = "decimal(19,8) default 1000.00", precision = 10, scale = 5)),
+            @AttributeOverride( name = "amount", column = @Column(name = "minimum_balance_amount",columnDefinition = "decimal(19,8) default 1000.00", precision = 10, scale = 10)),
             @AttributeOverride( name = "currency", column = @Column(name = "minimum_balance_currency")),
     })
     private Money minimumBalance;

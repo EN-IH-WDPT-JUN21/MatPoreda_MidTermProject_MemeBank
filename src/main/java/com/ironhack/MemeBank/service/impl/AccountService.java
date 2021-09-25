@@ -14,38 +14,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import javax.crypto.spec.SecretKeySpec;
 import javax.validation.Valid;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Locale;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Service
 public class AccountService {
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    AdminRepository adminRepository;
-
-    @Autowired
-    ThirdPartyRepository thirdPartyRepository;
 
     @Autowired
     AccountHolderRepository accountHolderRepository;
-
-    @Autowired
-    AccountRepository accountRepository;
 
     @Autowired
     CheckingRepository checkingRepository;
@@ -62,14 +42,9 @@ public class AccountService {
     @Autowired
     TransactionRepository transactionRepository;
 
-    public boolean checkLastpenaltyFee(Account account, Transaction currentTransaction){
+    public boolean checkLastPenaltyFee(Account account, Transaction currentTransaction){
         return transactionRepository.findLastTransactionWithGivenMonthAndTypeAndAccountId(account.getId(), 5, currentTransaction.getDate()).isPresent();
-    };
-
-    public boolean checkIfAccrualIsApplicable(Account account, Transaction currentTransaction){
-        return transactionRepository.findLastTransactionWithGivenMonthAndTypeAndAccountId(account.getId(), 5, currentTransaction.getDate()).isPresent();
-    };
-
+    }
 
     public Money findMinimumBalance(Account account) {
         if (checkingRepository.findById(account.getId()).isPresent()) {
@@ -80,7 +55,6 @@ public class AccountService {
         }
         return new Money(new BigDecimal(0));
     }
-
 
     public ResponseEntity<?> storeSavings(@Valid CreateAccountDTO passedObject) {
 
@@ -114,7 +88,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(String.valueOf(secretKey));
+                newAccount.setSecretKey(Arrays.toString(secretKey));
                 newAccount.setSalt(salt);
 
         newAccount.setAccountType(AccountType.SAVINGS);
@@ -155,7 +129,7 @@ public class AccountService {
                         HttpStatus.NOT_ACCEPTABLE);
             }
         } else {
-            newAccount.setInterestRate(new BigDecimal(0.0025));
+            newAccount.setInterestRate(new BigDecimal("0.0025"));
         }
 
         if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
@@ -190,18 +164,13 @@ public class AccountService {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ENGLISH);
-            formatter = formatter.withLocale(Locale.ENGLISH);
             LocalDate birthDate = primaryOwner.get().getDateOfBirth();
             LocalDate today     = LocalDate.now();
             int       years     = Period.between(birthDate, today).getYears();
             String accountType = (years < 24) ?  "STUDENT_CHECKING" : "CHECKING";
 
-
         switch (accountType) {
-
-            case "CHECKING": {
+            case "CHECKING" -> {
                 Checking newAccount = new Checking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
@@ -219,10 +188,10 @@ public class AccountService {
 
                 }
 
-                var salt     = Passwords.getNextSalt();
-                var password = primaryOwner.get().getPassword().toCharArray();
-                var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(String.valueOf(secretKey));
+                var salt      = Passwords.getNextSalt();
+                var password  = primaryOwner.get().getPassword().toCharArray();
+                var secretKey = Passwords.hash(password, salt);
+                newAccount.setSecretKey(Arrays.toString(secretKey));
                 newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.CHECKING);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -245,14 +214,12 @@ public class AccountService {
                 }
 
                 newAccount.setStatus(Status.ACTIVE);
-
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
                     Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
-
 
                 if (passedObject.getMonthlyMaintenanceFee() != null && !passedObject.getMonthlyMaintenanceFee().isEmpty()) {
                     if (GenericValidator.isDouble(passedObject.getMonthlyMaintenanceFee())) {
@@ -275,15 +242,10 @@ public class AccountService {
                 } else {
                     newAccount.setMinimumBalance(new Money(new BigDecimal(250)));
                 }
-
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
-
                 checkingRepository.save(newAccount);
-                break;
             }
-
-
-            case "STUDENT_CHECKING": {
+            case "STUDENT_CHECKING" -> {
                 StudentChecking newAccount = new StudentChecking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
@@ -300,11 +262,10 @@ public class AccountService {
                     }
 
                 }
-
-                var salt     = Passwords.getNextSalt();
-                var password = primaryOwner.get().getPassword().toCharArray();
-                var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(String.valueOf(secretKey));
+                var salt      = Passwords.getNextSalt();
+                var password  = primaryOwner.get().getPassword().toCharArray();
+                var secretKey = Passwords.hash(password, salt);
+                newAccount.setSecretKey(Arrays.toString(secretKey));
                 newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.STUDENT_CHECKING);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -327,18 +288,14 @@ public class AccountService {
                 }
 
                 newAccount.setStatus(Status.ACTIVE);
-
                 newAccount.setPrimaryOwner(primaryOwner.get());
                 if (passedObject.getSecondaryOwnerName() != null && !passedObject.getSecondaryOwnerName().isEmpty()) {
 
                     Optional<AccountHolder> secondaryOwner = accountHolderRepository.findByUsername(passedObject.getSecondaryOwnerName());
                     secondaryOwner.ifPresent(newAccount::setSecondaryOwner);
                 }
-
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
-
                 studentCheckingRepository.save(newAccount);
-                break;
             }
         }
 
@@ -370,7 +327,7 @@ public class AccountService {
                 var salt     = Passwords.getNextSalt();
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
-                newAccount.setSecretKey(String.valueOf(secretKey));
+                newAccount.setSecretKey(Arrays.toString(secretKey));
                 newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.CREDIT_CARD);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -415,7 +372,7 @@ public class AccountService {
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 } else {
-                    newAccount.setInterestRate(new BigDecimal(0.0025));
+                    newAccount.setInterestRate(new BigDecimal("0.0025"));
                 }
 
 
@@ -467,13 +424,11 @@ public class AccountService {
             }
         }
         if (!validAccount) {
-            return new ResponseEntity<>("Account of type: ".concat(accountType.toString()).concat(" does not exist."),
+            return new ResponseEntity<>("Account of type: ".concat(accountType).concat(" does not exist."),
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
         if (accountType.equals("CHECKING")) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            formatter = formatter.withLocale(Locale.ENGLISH);
             LocalDate birthDate = primaryOwner.get().getDateOfBirth();
             LocalDate today     = LocalDate.now();
             int       years     = Period.between(birthDate, today).getYears();
@@ -485,7 +440,7 @@ public class AccountService {
 
 
         switch (accountType) {
-            case "SAVINGS": {
+            case "SAVINGS" -> {
                 Savings newAccount = new Savings();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
@@ -503,11 +458,7 @@ public class AccountService {
 
                 }
 
-//                var salt     = Passwords.getNextSalt();
-//                var password = primaryOwner.get().getPassword().toCharArray();
-//                var secretKey=Passwords.hash(password, salt);
-//                newAccount.setSecretKey(secretKey);
-//                newAccount.setSalt(salt);
+
                 newAccount.setAccountType(AccountType.valueOf(accountType));
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
@@ -546,7 +497,7 @@ public class AccountService {
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 } else {
-                    newAccount.setInterestRate(new BigDecimal(0.0025));
+                    newAccount.setInterestRate(new BigDecimal("0.0025"));
                 }
 
                 if (passedObject.getMinimumBalance() != null && !passedObject.getMinimumBalance().isEmpty()) {
@@ -563,10 +514,8 @@ public class AccountService {
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
 
                 savingsRepository.save(newAccount);
-                break;
             }
-
-            case "CHECKING": {
+            case "CHECKING" -> {
                 Checking newAccount = new Checking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(100)));
@@ -584,11 +533,6 @@ public class AccountService {
 
                 }
 
-//                var salt     = Passwords.getNextSalt();
-//                var password = primaryOwner.get().getPassword().toCharArray();
-//                var secretKey=Passwords.hash(password, salt);
-//                newAccount.setSecretKey(secretKey);
-//                newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.valueOf(accountType));
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
@@ -644,11 +588,8 @@ public class AccountService {
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
 
                 checkingRepository.save(newAccount);
-                break;
             }
-
-
-            case "STUDENT_CHECKING": {
+            case "STUDENT_CHECKING" -> {
                 StudentChecking newAccount = new StudentChecking();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
@@ -666,11 +607,6 @@ public class AccountService {
 
                 }
 
-//                var salt     = Passwords.getNextSalt();
-//                var password = primaryOwner.get().getPassword().toCharArray();
-//                var secretKey=Passwords.hash(password, salt);
-//                newAccount.setSecretKey(secretKey);
-//                newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.valueOf(accountType));
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
@@ -678,7 +614,7 @@ public class AccountService {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
                     if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
-                       try {
+                        try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -703,10 +639,8 @@ public class AccountService {
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
 
                 studentCheckingRepository.save(newAccount);
-                break;
             }
-
-            case "CREDIT_CARD": {
+            case "CREDIT_CARD" -> {
                 CreditCard newAccount = new CreditCard();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
@@ -724,11 +658,6 @@ public class AccountService {
 
                 }
 
-//                var salt     = Passwords.getNextSalt();
-//                var password = primaryOwner.get().getPassword().toCharArray();
-//                var secretKey=Passwords.hash(password, salt);
-//                newAccount.setSecretKey(secretKey);
-//                newAccount.setSalt(salt);
                 newAccount.setAccountType(AccountType.valueOf(accountType));
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
@@ -772,7 +701,7 @@ public class AccountService {
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 } else {
-                    newAccount.setInterestRate(new BigDecimal(0.0025));
+                    newAccount.setInterestRate(new BigDecimal("0.0025"));
                 }
 
 
@@ -795,7 +724,6 @@ public class AccountService {
                 newAccount.setPenaltyFee(new Money(new BigDecimal(40)));
 
                 creditCardRepository.save(newAccount);
-                break;
             }
         }
 
