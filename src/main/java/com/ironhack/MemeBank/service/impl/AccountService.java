@@ -710,8 +710,8 @@ public class AccountService {
                 CreditCard newAccount = new CreditCard();
                 if (passedObject.getBalance().isEmpty()) {
                     newAccount.setBalance(new Money(new BigDecimal(0)));
-                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) < Long.parseLong("100")) {
-                    return new ResponseEntity<>("Starting balance for credit card account cannot be lower than credit.",
+                } else if (!GenericValidator.isDouble(passedObject.getBalance()) || Long.parseLong(passedObject.getBalance()) != Long.parseLong(passedObject.getCreditLimit())) {
+                    return new ResponseEntity<>("Starting balance for credit card must be equal to credit limit.",
                             HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     try {

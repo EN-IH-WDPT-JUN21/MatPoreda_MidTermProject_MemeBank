@@ -107,6 +107,7 @@ public class TransactionController {
         }
         //apply monthly maintenance fee before processing of transaction
         transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
+        transactionService.addInterestRates(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
 
         Transaction newTransaction = new Transaction();
         newTransaction.setAccount(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
@@ -199,7 +200,11 @@ public class TransactionController {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
+        transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
+        transactionService.addInterestRates(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
+
         transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(accountId)).get());
+        transactionService.addInterestRates(accountRepository.findById(Long.valueOf(accountId)).get());
 
         Transaction newTransaction = new Transaction();
         Account donorAccount=accountRepository.findById(Long.valueOf(accountId)).get();

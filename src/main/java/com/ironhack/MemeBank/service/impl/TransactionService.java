@@ -9,9 +9,7 @@ import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.enums.TransactionStatus;
 import com.ironhack.MemeBank.enums.TransactionType;
-import com.ironhack.MemeBank.repository.AccountRepository;
-import com.ironhack.MemeBank.repository.ThirdPartyRepository;
-import com.ironhack.MemeBank.repository.TransactionRepository;
+import com.ironhack.MemeBank.repository.*;
 import org.apache.commons.validator.GenericValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +30,12 @@ public class TransactionService {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    SavingsRepository savingsRepository;
+
+    @Autowired
+    CreditCardRepository creditCardRepository;
 
     @Autowired
     ThirdPartyRepository thirdPartyRepository;
@@ -57,7 +61,7 @@ public class TransactionService {
 
     public void addMaintenanceFee(Account account) {
         AccountType accountType = account.getAccountType();
-        if (accountType.equals(AccountType.CHECKING) || accountType.equals(AccountType.CREDIT_CARD)) {
+        if (accountType.equals(AccountType.CHECKING)) {
 
             Optional<Transaction> lastMaintenanceFee = transactionRepository.findLastMonthlyMaintenanceFee(account.getId());
             LocalDate             calculationDate    = lastMaintenanceFee.isPresent() ? lastMaintenanceFee.get().getDate().toLocalDate() : account.getCreationDate();
@@ -82,7 +86,7 @@ public class TransactionService {
                     LocalDate initialDate     = LocalDate.now().minusMonths(i);
                     LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
                     newTransaction.setDate(transactionDate.atStartOfDay());
-                    newTransaction.setDescription("Monthly maintenance fee"+daysBetween);
+                    newTransaction.setDescription("Monthly maintenance fee");
                     newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Monthly maintenance fee applied",
                             HttpStatus.CREATED)));
                     newTransaction.setTransactionInitiator(null);
@@ -94,6 +98,84 @@ public class TransactionService {
             }
         }
 
+    }
+
+
+    public void addInterestRates(Account account) {
+        AccountType accountType = account.getAccountType();
+        if (accountType.equals(AccountType.SAVINGS) || accountType.equals(AccountType.CREDIT_CARD)) {
+
+            Optional<Transaction> lastInterestsAccrual = transactionRepository.findLastInterestRatesAccrual(account.getId());
+            LocalDate             calculationDate      = lastInterestsAccrual.isPresent() ? lastInterestsAccrual.get().getDate().toLocalDate() : account.getCreationDate();
+
+            long monthsBetween = ChronoUnit.MONTHS.between(
+                    YearMonth.from(calculationDate),
+                    YearMonth.from(LocalDateTime.now())
+            );
+            long daysBetween = ChronoUnit.DAYS.between(calculationDate, LocalDate.now());
+
+            switch (accountType) {
+                case SAVINGS: {
+                    if (Math.floor((int) monthsBetween) >= 12
+                            //check if last fee was in last month
+                            && ChronoUnit.DAYS.between(calculationDate, LocalDate.now()) >= LocalDate.now().lengthOfYear()
+                    ) {
+                        int numberOfTransactions = (int) Math.floor(monthsBetween/12L);
+                        for (int i = numberOfTransactions; i > 0; i--) {
+                            Transaction newTransaction = new Transaction();
+                            newTransaction.setAccount(account);
+                            newTransaction.setType(TransactionType.ACCRUAL);
+                            newTransaction.setStatus(TransactionStatus.ACCEPTED);
+                            BigDecimal interestRate=savingsRepository.findById(account.getId()).get().getInterestRate();
+                            newTransaction.setAmount(new Money(account.getBalance().getAmount().multiply(interestRate)));
+
+                            LocalDate initialDate     = LocalDate.now().minusMonths(i* 12L);
+                            LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
+                            newTransaction.setDate(transactionDate.atStartOfDay());
+                            newTransaction.setDescription("Interest rates accrual");
+                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Interest rates accrual applied",
+                                    HttpStatus.CREATED)));
+                            newTransaction.setTransactionInitiator(null);
+                            newTransaction.setTransactionInitiatorAccount(null);
+                            account.setBalance(new Money(account.getBalance().getAmount().add(newTransaction.getAmount().getAmount())));
+                            accountRepository.save(account);
+                            transactionRepository.save(newTransaction);
+                        }
+                    }
+                }
+
+                case CREDIT_CARD: {
+                    if (Math.floor((int) monthsBetween) >= 1
+                            //check if last fee was in last month
+                            && ChronoUnit.DAYS.between(calculationDate, LocalDate.now()) >= LocalDate.now().lengthOfMonth()
+                    ) {
+                        int numberOfTransactions = (int) Math.floor(monthsBetween);
+                        for (int i = numberOfTransactions; i > 0; i--) {
+                            Transaction newTransaction = new Transaction();
+                            newTransaction.setAccount(account);
+                            newTransaction.setType(TransactionType.ACCRUAL);
+                            newTransaction.setStatus(TransactionStatus.ACCEPTED);
+                            BigDecimal interestRate=creditCardRepository.findById(account.getId()).get().getInterestRate();
+                            BigDecimal creditLimit=creditCardRepository.findById(account.getId()).get().getCreditLimit().getAmount();
+                            BigDecimal creditOwed=creditLimit.subtract(account.getBalance().getAmount());
+                            newTransaction.setAmount(new Money(new BigDecimal(0).subtract(creditOwed.multiply(interestRate))));
+
+                            LocalDate initialDate     = LocalDate.now().minusMonths(i);
+                            LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
+                            newTransaction.setDate(transactionDate.atStartOfDay());
+                            newTransaction.setDescription("Interest rates accrual");
+                            newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Interest rates accrual applied",
+                                    HttpStatus.CREATED)));
+                            newTransaction.setTransactionInitiator(null);
+                            newTransaction.setTransactionInitiatorAccount(null);
+                            account.setBalance(new Money(account.getBalance().getAmount().add(newTransaction.getAmount().getAmount())));
+                            accountRepository.save(account);
+                            transactionRepository.save(newTransaction);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public ResponseEntity<?> storeTransaction(@Valid TransactionDTO passedObject) {
