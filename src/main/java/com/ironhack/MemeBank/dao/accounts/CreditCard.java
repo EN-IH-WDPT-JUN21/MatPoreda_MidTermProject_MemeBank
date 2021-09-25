@@ -32,6 +32,14 @@ public class CreditCard extends Account{
     @Column(columnDefinition = "numeric default 100")
     private Money creditLimit;
 
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride( name = "amount", column = @Column(name = "monthly_maintenance_fee_amount")),
+            @AttributeOverride( name = "currency", column = @Column(name = "monthly_maintenance_fee_currency")),
+    })
+    @Column(columnDefinition = "numeric default 5")
+    private Money monthlyMaintenanceFee;
+
 
     @Embedded
     @AttributeOverrides({
@@ -46,5 +54,10 @@ public class CreditCard extends Account{
     private BigDecimal interestRate;
 
     public CreditCard() {
+    }
+
+    @Override
+    public Money getMonthlyMaintenanceFee() {
+        return this.monthlyMaintenanceFee;
     }
 }

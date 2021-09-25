@@ -18,19 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import javax.persistence.CascadeType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.validation.Valid;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Date;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
 @Service
@@ -59,6 +53,47 @@ public class TransactionService {
         newTransaction.setTransactionInitiator(null);
         newTransaction.setTransactionInitiatorAccount(null);
         return newTransaction;
+    }
+
+    public void addMaintenanceFee(Account account) {
+        AccountType accountType = account.getAccountType();
+        if (accountType.equals(AccountType.CHECKING) || accountType.equals(AccountType.CREDIT_CARD)) {
+
+            Optional<Transaction> lastMaintenanceFee = transactionRepository.findLastMonthlyMaintenanceFee(account.getId());
+            LocalDate             calculationDate    = lastMaintenanceFee.isPresent() ? lastMaintenanceFee.get().getDate().toLocalDate() : account.getCreationDate();
+
+            long monthsBetween = ChronoUnit.MONTHS.between(
+                    YearMonth.from(calculationDate),
+                    YearMonth.from(LocalDateTime.now())
+            );
+            long daysBetween =ChronoUnit.DAYS.between(calculationDate, LocalDate.now());
+            if (Math.floor((int) monthsBetween) >= 1
+                    //check if last fee was in last month
+                    && ChronoUnit.DAYS.between(calculationDate, LocalDate.now())>=LocalDate.now().lengthOfMonth()
+            ) {
+                int numberOfTransactions = (int) Math.floor((int) monthsBetween);
+                for (int i = numberOfTransactions; i > 0; i--) {
+                    Transaction newTransaction = new Transaction();
+                    newTransaction.setAccount(account);
+                    newTransaction.setType(TransactionType.MONTHLY_MAINTENANCE_FEE);
+                    newTransaction.setStatus(TransactionStatus.ACCEPTED);
+                    newTransaction.setAmount(new Money(new BigDecimal(0).subtract(account.getMonthlyMaintenanceFee().getAmount())));
+
+                    LocalDate initialDate     = LocalDate.now().minusMonths(i);
+                    LocalDate transactionDate = initialDate.withDayOfMonth(initialDate.lengthOfMonth());
+                    newTransaction.setDate(transactionDate.atStartOfDay());
+                    newTransaction.setDescription("Monthly maintenance fee"+daysBetween);
+                    newTransaction.setResponseStatus(String.valueOf(new ResponseEntity<String>("Monthly maintenance fee applied",
+                            HttpStatus.CREATED)));
+                    newTransaction.setTransactionInitiator(null);
+                    newTransaction.setTransactionInitiatorAccount(null);
+                    account.setBalance(new Money(account.getBalance().getAmount().subtract(account.getMonthlyMaintenanceFee().getAmount())));
+                    accountRepository.save(account);
+                    transactionRepository.save(newTransaction);
+                }
+            }
+        }
+
     }
 
     public ResponseEntity<?> storeTransaction(@Valid TransactionDTO passedObject) {

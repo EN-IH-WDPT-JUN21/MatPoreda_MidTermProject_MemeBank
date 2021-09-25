@@ -105,7 +105,8 @@ public class TransactionController {
             return new ResponseEntity<>("Account secret key must be provided",
                     HttpStatus.NOT_ACCEPTABLE);
         }
-
+        //apply monthly maintenance fee before processing of transaction
+        transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
 
         Transaction newTransaction = new Transaction();
         newTransaction.setAccount(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
@@ -163,9 +164,6 @@ public class TransactionController {
     @PostMapping("/transactions/{id}")
     public ResponseEntity<?> store(@RequestBody TransactionDTO passedObject, @PathVariable(name="id") String accountId) {
 
-
-
-
         if (GenericValidator.isBlankOrNull(accountId) || !GenericValidator.isLong(accountId)){
             return new ResponseEntity<>("Your Account ID must be provided as a valid long",
                     HttpStatus.NOT_ACCEPTABLE);
@@ -200,6 +198,8 @@ public class TransactionController {
             return new ResponseEntity<>("Account ID and account owner name does not match",
                     HttpStatus.NOT_ACCEPTABLE);
         }
+
+        transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(accountId)).get());
 
         Transaction newTransaction = new Transaction();
         Account donorAccount=accountRepository.findById(Long.valueOf(accountId)).get();

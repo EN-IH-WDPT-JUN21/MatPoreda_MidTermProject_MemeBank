@@ -5,6 +5,7 @@ import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.users.User;
+import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.enums.Status;
 import com.ironhack.MemeBank.security.SecretKey;
 import lombok.AllArgsConstructor;
@@ -50,10 +51,13 @@ public abstract class Account {
     })
     private Money penaltyFee;
 
-    @Temporal(TemporalType.DATE)
-    private Date creationDate;
+//    @Temporal(TemporalType.DATE)
+    private LocalDate creationDate;
 
     private Status status;
+
+    @Enumerated
+    private AccountType accountType;
 
     @ManyToOne(cascade=CascadeType.ALL)
     @JoinColumn(nullable=false)
@@ -67,4 +71,5 @@ public abstract class Account {
     @JsonIgnore
     private Set<Transaction> transactionList= new HashSet<>();
 
+    public abstract Money getMonthlyMaintenanceFee();
 }

@@ -26,6 +26,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("type") Integer type
     );
 
+    @Query(value="SELECT t.* FROM transaction t WHERE t.account_account_id=:account_id AND t.type=6 ORDER BY t.date DESC limit 1", nativeQuery = true)
+    Optional<Transaction> findLastMonthlyMaintenanceFee(
+            @Param("account_id") Long account_id
+    );
+
+
     List<Transaction> findByTransactionInitiator(User user);
 
 

@@ -41,4 +41,9 @@ public class Savings extends Account {
 
     public Savings() {
     }
+
+    @Override
+    public Money getMonthlyMaintenanceFee() {
+        return null;
+    }
 }
