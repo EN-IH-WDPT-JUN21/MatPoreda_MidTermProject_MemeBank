@@ -4,6 +4,7 @@ import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.accounts.Account;
 import com.ironhack.MemeBank.dao.users.ThirdParty;
+import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.enums.TransactionStatus;
@@ -31,6 +32,9 @@ public class TransactionService {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     SavingsRepository savingsRepository;
@@ -267,10 +271,26 @@ public class TransactionService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Secret Key. Account"+ account.getSecretKey()+"passed: "+transactionDTO.getSecretKey());
             } else {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Hashed key");
-
             }
-
         }
         return null;
     }
+
+    public boolean checkIfTodaysTransactionVolumeIsGreaterThanMaxDailyVolume(Long userId, Transaction transaction){
+        if(userRepository.findById(userId).isPresent()) {
+            User       user             = userRepository.findById(userId).get();
+            BigDecimal max24HVolume     = transactionRepository.findMaxDailyVolume(userId);
+            BigDecimal current24HVolume = transactionRepository.findTransactionVolumeInLast24H(user.getId());
+            if (max24HVolume.compareTo(new BigDecimal("0.00"))<=0) {
+                return false;
+            } else return max24HVolume.multiply(new BigDecimal("1.5")).compareTo(current24HVolume.add(transaction.getAmount().getAmount())) < 0;
+
+        }
+        return false;
+    }
+
+    public boolean multipleTransactionsInSingleSecond(Account account){
+
+    }
+
 }

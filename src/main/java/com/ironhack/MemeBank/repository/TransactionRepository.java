@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +37,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("account_id") Long account_id
     );
 
+    @Query(value="select IFNULL(MAX(t.amount),0) max_volume from (SELECT transaction_initiator_user_id, DATE(date), SUM(amount) amount FROM TRANSACTION  WHERE transaction_initiator_user_id=2 AND type=2 AND status=1 GROUP BY  transaction_initiator_user_id, DATE(date)) t", nativeQuery = true)
+    BigDecimal findMaxDailyVolume(
+            @Param("user_id") Long user_id
+    );
+
+    @Query(value="SELECT IFNULL(SUM(amount), 0) amount FROM TRANSACTION  WHERE transaction_initiator_user_id=:user_id AND type=2 AND status=1 AND (date >= NOW() - INTERVAL 1 DAY)", nativeQuery = true)
+    BigDecimal findTransactionVolumeInLast24H(
+            @Param("user_id") Long user_id
+    );
 
     List<Transaction> findByTransactionInitiator(User user);
 

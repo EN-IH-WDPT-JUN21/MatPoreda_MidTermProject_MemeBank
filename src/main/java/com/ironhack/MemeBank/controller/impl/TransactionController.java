@@ -4,6 +4,7 @@ import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.accounts.Account;
 import com.ironhack.MemeBank.dto.TransactionDTO;
+import com.ironhack.MemeBank.enums.Status;
 import com.ironhack.MemeBank.enums.TransactionStatus;
 import com.ironhack.MemeBank.enums.TransactionType;
 import com.ironhack.MemeBank.repository.*;
@@ -63,7 +64,7 @@ public class TransactionController {
 
         passedObject.setHashKey(hashedKey);
         passedObject.setTransactionInitiatorUserId(String.valueOf(thirdPartyRepository.findByUsername(userServiceImpl.getCurrentUsername()).get().getId()));
-        Account testAccount=transactionService.evaluateAccounts(passedObject);
+        transactionService.evaluateAccounts(passedObject);
 
 
         if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getAmount())) || !GenericValidator.isDouble(passedObject.getAmount())) {
@@ -81,6 +82,11 @@ public class TransactionController {
 
         if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getSecretKey()))) {
             return new ResponseEntity<>("Account secret key must be provided",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        if(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get().getStatus().equals(Status.FROZEN)){
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
                     HttpStatus.NOT_ACCEPTABLE);
         }
         //apply monthly maintenance fee before processing of transaction
@@ -102,6 +108,13 @@ public class TransactionController {
             newTransaction.setType(TransactionType.CHARGE);
         } else {
             newTransaction.setType(TransactionType.TRANSFER);
+        }
+
+        if(transactionService.checkIfTodaysTransactionVolumeIsGreaterThanMaxDailyVolume( newTransaction.getAccount().getPrimaryOwner().getId(), newTransaction)){
+            newTransaction.getAccount().setStatus(Status.FROZEN);
+            accountRepository.save(newTransaction.getAccount());
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
+                    HttpStatus.NOT_ACCEPTABLE);
         }
 
         BigDecimal newBalance     = new BigDecimal(String.valueOf(balance.getAmount().add(transactionVolume.getAmount())));
@@ -177,7 +190,12 @@ public class TransactionController {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        //apply interest rte accrual and maintenance fee for donor and target accounts
+        if(accountRepository.findById(Long.valueOf(accountId)).get().getStatus().equals(Status.FROZEN)){
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        //apply interest rate accrual and maintenance fee for donor and target accounts
         transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
         transactionService.addInterestRates(accountRepository.findById(Long.valueOf(passedObject.getAccountId())).get());
         transactionService.addMaintenanceFee(accountRepository.findById(Long.valueOf(accountId)).get());
@@ -205,6 +223,14 @@ public class TransactionController {
         newTransaction.setTransactionInitiator(donorAccount.getPrimaryOwner());
         newTransaction.setTransactionInitiatorAccount(donorAccount);
         newTransaction.setType(TransactionType.TRANSFER);
+
+
+        if(transactionService.checkIfTodaysTransactionVolumeIsGreaterThanMaxDailyVolume(donorAccount.getPrimaryOwner().getId(), newTransaction)){
+            donorAccount.setStatus(Status.FROZEN);
+            accountRepository.save(donorAccount);
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
 
         BigDecimal newBalance     = donorAccount.getBalance().getAmount().subtract(transactionVolume.getAmount());
         Money      minimumBalance = accountService.findMinimumBalance(donorAccount);
