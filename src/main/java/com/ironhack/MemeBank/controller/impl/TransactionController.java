@@ -110,12 +110,21 @@ public class TransactionController {
             newTransaction.setType(TransactionType.TRANSFER);
         }
 
+        //Fraud detection - volume exceeding 150% of other day volume
         if(transactionService.checkIfTodaysTransactionVolumeIsGreaterThanMaxDailyVolume( newTransaction.getAccount().getPrimaryOwner().getId(), newTransaction)){
             newTransaction.getAccount().setStatus(Status.FROZEN);
             accountRepository.save(newTransaction.getAccount());
             return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
                     HttpStatus.NOT_ACCEPTABLE);
         }
+        //Fraud detection - more than 2 transactions in one second
+        if(transactionRepository.findTransactionCountInLastSecond(Long.valueOf(passedObject.getAccountId())).compareTo(new BigDecimal("2"))>=0){
+            newTransaction.getAccount().setStatus(Status.FROZEN);
+            accountRepository.save(newTransaction.getAccount());
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
 
         BigDecimal newBalance     = new BigDecimal(String.valueOf(balance.getAmount().add(transactionVolume.getAmount())));
         Money      minimumBalance = accountService.findMinimumBalance(newTransaction.getAccount());
@@ -151,7 +160,7 @@ public class TransactionController {
 
 
     @PostMapping("/transactions/{id}")
-    public ResponseEntity<?> store(@RequestBody TransactionDTO passedObject, @PathVariable(name="id") String accountId) {
+    public ResponseEntity<?> storeAccountHolderTransaction(@RequestBody TransactionDTO passedObject, @PathVariable(name="id") String accountId) {
 
         //check if accountId is present and valid for user
         if (GenericValidator.isBlankOrNull(accountId) || !GenericValidator.isLong(accountId)){
@@ -224,10 +233,18 @@ public class TransactionController {
         newTransaction.setTransactionInitiatorAccount(donorAccount);
         newTransaction.setType(TransactionType.TRANSFER);
 
-
+        //Fraud detection - volume exceeding 150% of other day volume
         if(transactionService.checkIfTodaysTransactionVolumeIsGreaterThanMaxDailyVolume(donorAccount.getPrimaryOwner().getId(), newTransaction)){
             donorAccount.setStatus(Status.FROZEN);
             accountRepository.save(donorAccount);
+            return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
+                    HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        //Fraud detection - more than 2 transactions in one second
+        if(transactionRepository.findTransactionCountInLastSecond(Long.valueOf(passedObject.getAccountId())).compareTo(new BigDecimal("2"))>=0){
+            newTransaction.getAccount().setStatus(Status.FROZEN);
+            accountRepository.save(newTransaction.getAccount());
             return new ResponseEntity<>("Account is frozen according to security politics. Please contact bank administrator.",
                     HttpStatus.NOT_ACCEPTABLE);
         }

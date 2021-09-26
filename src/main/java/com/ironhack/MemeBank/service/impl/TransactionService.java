@@ -289,8 +289,5 @@ public class TransactionService {
         return false;
     }
 
-    public boolean multipleTransactionsInSingleSecond(Account account){
-
-    }
 
 }

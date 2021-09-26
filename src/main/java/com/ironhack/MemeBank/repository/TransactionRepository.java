@@ -47,6 +47,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("user_id") Long user_id
     );
 
+
+    @Query(value="SELECT IFNULL(count(amount), 0) amount FROM TRANSACTION  WHERE transaction_initiator_user_id=2 AND type=2 AND status=1 AND (date >= NOW() - INTERVAL 1 SECOND)", nativeQuery = true)
+    BigDecimal findTransactionCountInLastSecond(
+            @Param("user_id") Long user_id
+    );
     List<Transaction> findByTransactionInitiator(User user);
 
 

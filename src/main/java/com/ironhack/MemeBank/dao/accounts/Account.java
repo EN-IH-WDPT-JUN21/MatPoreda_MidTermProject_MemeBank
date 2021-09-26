@@ -36,7 +36,7 @@ public abstract class Account {
     })
     private Money balance;
     private String secretKey;
-    private byte[] salt;
+    private String salt;
 
     @Embedded
     @AttributeOverrides({

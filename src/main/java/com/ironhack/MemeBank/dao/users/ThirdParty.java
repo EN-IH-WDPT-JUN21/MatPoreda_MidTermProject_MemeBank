@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Table(name="third_party")
 public class ThirdParty extends User{
     private String hashKey;
-    private byte[] salt;
+    private String salt;
 
     public ThirdParty() {
         

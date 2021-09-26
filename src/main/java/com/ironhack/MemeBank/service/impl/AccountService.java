@@ -89,7 +89,7 @@ public class AccountService {
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
                 newAccount.setSecretKey(Arrays.toString(secretKey));
-                newAccount.setSalt(salt);
+                newAccount.setSalt(Arrays.toString(salt));
 
         newAccount.setAccountType(AccountType.SAVINGS);
         newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
@@ -97,16 +97,16 @@ public class AccountService {
         if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
             newAccount.setCreationDate(LocalDate.now());
         } else {
-            if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+            if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                 try {
                     newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                    return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                             HttpStatus.NOT_ACCEPTABLE);
                 }
             } else {
-                return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                         HttpStatus.NOT_ACCEPTABLE);
             }
         }
@@ -192,23 +192,23 @@ public class AccountService {
                 var password  = primaryOwner.get().getPassword().toCharArray();
                 var secretKey = Passwords.hash(password, salt);
                 newAccount.setSecretKey(Arrays.toString(secretKey));
-                newAccount.setSalt(salt);
+                newAccount.setSalt(Arrays.toString(salt));
                 newAccount.setAccountType(AccountType.CHECKING);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -266,23 +266,23 @@ public class AccountService {
                 var password  = primaryOwner.get().getPassword().toCharArray();
                 var secretKey = Passwords.hash(password, salt);
                 newAccount.setSecretKey(Arrays.toString(secretKey));
-                newAccount.setSalt(salt);
+                newAccount.setSalt(Arrays.toString(salt));
                 newAccount.setAccountType(AccountType.STUDENT_CHECKING);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -328,23 +328,23 @@ public class AccountService {
                 var password = primaryOwner.get().getPassword().toCharArray();
                 var secretKey=Passwords.hash(password, salt);
                 newAccount.setSecretKey(Arrays.toString(secretKey));
-                newAccount.setSalt(salt);
+                newAccount.setSalt(Arrays.toString(salt));
                 newAccount.setAccountType(AccountType.CREDIT_CARD);
                 newAccount.setPenaltyFee(new Money(BigDecimal.valueOf(40)));
 
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -465,16 +465,16 @@ public class AccountService {
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -539,16 +539,16 @@ public class AccountService {
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -613,16 +613,16 @@ public class AccountService {
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }
@@ -664,16 +664,16 @@ public class AccountService {
                 if (GenericValidator.isBlankOrNull(passedObject.getCreationDate())) {
                     newAccount.setCreationDate(LocalDate.now());
                 } else {
-                    if (GenericValidator.isDate(passedObject.getCreationDate(), "dd-MM-yyyy", true)) {
+                    if (GenericValidator.isDate(passedObject.getCreationDate(), "yyyy-MM-dd", true)) {
                         try {
                             newAccount.setCreationDate(LocalDate.parse(passedObject.getCreationDate()));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                            return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                     HttpStatus.NOT_ACCEPTABLE);
                         }
                     } else {
-                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in dd-MM-yyyy format",
+                        return new ResponseEntity<>("Invalid creation date format. Please please provide date in yyyy-MM-dd format",
                                 HttpStatus.NOT_ACCEPTABLE);
                     }
                 }

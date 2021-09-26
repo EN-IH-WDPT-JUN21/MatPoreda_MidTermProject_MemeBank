@@ -51,10 +51,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 //*********GET********
                 //accounts
-                .mvcMatchers(HttpMethod.GET, "/accounts").authenticated() //return owned accounts
+                .mvcMatchers(HttpMethod.GET, "/accounts").hasAnyRole("ACCOUNT_HOLDER")  //return owned accounts
                 .mvcMatchers(HttpMethod.GET, "/accounts/all").hasAnyRole("ADMIN") // return all accounts
                 //transactions
-                .mvcMatchers(HttpMethod.GET, "/transactions").authenticated() //return owned transactions
+                .mvcMatchers(HttpMethod.GET, "/transactions").hasAnyRole("ACCOUNT_HOLDER")//return owned transactions
                 .mvcMatchers(HttpMethod.GET, "/transactions/all").hasAnyRole("ADMIN") // return all transactions
                 //users
                 .mvcMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN")  //return all users

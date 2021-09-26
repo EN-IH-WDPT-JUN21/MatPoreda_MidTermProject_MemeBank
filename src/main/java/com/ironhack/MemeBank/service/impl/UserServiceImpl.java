@@ -50,25 +50,25 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl() {
     }
 
-    public void save(User user) {
-        userRepository.save(user);
-    }
-
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).get();
-    }
-
-    public User saveUser (User user) {
-        return userRepository.save(user);
-    }
-
-    public List<User> findUserList() {
-        return userRepository.findAll();
-    }
+//    public void save(User user) {
+//        userRepository.save(user);
+//    }
+//
+//    public User findByUsername(String username) {
+//        return userRepository.findByUsername(username).get();
+//    }
+//
+//    public User saveUser (User user) {
+//        return userRepository.save(user);
+//    }
+//
+//    public List<User> findUserList() {
+//        return userRepository.findAll();
+//    }
 
         public ResponseEntity<?> storeAny(@RequestBody CreateUserDTO passedObject) {
-        if(GenericValidator.isBlankOrNull(passedObject.getRoleType())){
-            return new ResponseEntity<>("Role type must be specified!",
+        if(GenericValidator.isBlankOrNull(passedObject.getRoleType()) || GenericValidator.isBlankOrNull(String.valueOf(passedObject.getRole()))){
+            return new ResponseEntity<>("RoleType must be specified!",
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
                     HttpStatus.NOT_ACCEPTABLE);
         }
 
-        String         role      =passedObject.getRoleType().toUpperCase().replaceAll("\\s+","");
+        String role=(!GenericValidator.isBlankOrNull(passedObject.getRoleType())) ? passedObject.getRoleType().toUpperCase().replaceAll("\\s+", "") : passedObject.getRole().getName();
         Role verifiedRole;
 
         //Check if user already exists
@@ -126,13 +126,16 @@ public class UserServiceImpl implements UserService {
                         localAccountHolder.setUsername(passedObject.getUsername());
                     }
 
-                    if (GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true)) {
-                        return new ResponseEntity<>("Date of birth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
-                    } else {
-                        localAccountHolder.setDateOfBirth(LocalDate.parse(passedObject.getDateOfBirth()));
+                    if ((GenericValidator.isBlankOrNull(passedObject.getDateOfBirth()) || !GenericValidator.isDate(passedObject.getDateOfBirth(), "yyyy-MM-dd", true))
+
+                    ) {
+                        return new ResponseEntity<>("DateOfBirth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
                     }
-
-
+//                    else if(GenericValidator.isBlankOrNull(passedObject.getLocalDateOfBirth().toString())){
+//                        return new ResponseEntity<>("DateOfBirth cannot be empty and must be provided in yyyy-MM-dd format", HttpStatus.NOT_ACCEPTABLE);
+//                    }
+                    LocalDate dateOfBirth=(!GenericValidator.isBlankOrNull(passedObject.getDateOfBirth())) ? LocalDate.parse(passedObject.getDateOfBirth()) : LocalDate.now();
+                    localAccountHolder.setDateOfBirth(dateOfBirth);
                     localAccountHolder.setPrimaryAddress(passedObject.getPrimaryAddress());
                     localAccountHolder.setMailingAddress(passedObject.getMailingAddress());
                     localAccountHolder.setRole(verifiedRole);
@@ -149,7 +152,7 @@ public class UserServiceImpl implements UserService {
                     var password  = localThirdParty.getPassword().toCharArray();
                     var secretKey = Passwords.hash(password, salt);
                     localThirdParty.setHashKey(Arrays.toString(secretKey));
-                    localThirdParty.setSalt(salt);
+                    localThirdParty.setSalt(Arrays.toString(salt));
 
                     if (GenericValidator.isBlankOrNull(passedObject.getUsername())) {
                         return new ResponseEntity<>("Username and password cannot be empty!", HttpStatus.NOT_ACCEPTABLE);

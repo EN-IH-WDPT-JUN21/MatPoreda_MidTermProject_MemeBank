@@ -8,6 +8,7 @@ import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.repository.AccountHolderRepository;
 import com.ironhack.MemeBank.repository.AccountRepository;
+import com.ironhack.MemeBank.repository.AdminRepository;
 import com.ironhack.MemeBank.repository.UserRepository;
 import com.ironhack.MemeBank.service.impl.AccountService;
 import com.ironhack.MemeBank.service.impl.UserServiceImpl;
@@ -39,10 +40,14 @@ public class AccountController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    AdminRepository adminRepository;
+
 
     @GetMapping("/accounts")
     @ResponseStatus(HttpStatus.OK)
     public List<Account> getAccounts() {
+//        if(adminRepository.findByUsername(userServiceImpl.getCurrentUsername()).isPresent())
         return accountRepository.findByPrimaryOwnerOrSecondaryOwner(userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get(), userRepository.findByUsername(userServiceImpl.getCurrentUsername()).get());
     }
 
@@ -107,15 +112,15 @@ public class AccountController {
     }
 
     @PostMapping("/accounts/set_balance/{id}")
-    public ResponseEntity<?> store(@RequestBody TransactionDTO passedObject, @PathVariable(name = "id") String accountId) {
+    public ResponseEntity<?> setBalance(@RequestBody TransactionDTO passedObject, @PathVariable(name = "id") String accountId) {
 
         if (GenericValidator.isBlankOrNull(accountId) || !GenericValidator.isLong(accountId)) {
             return new ResponseEntity<>("AccountId must be provided as a valid long",
                     HttpStatus.NOT_ACCEPTABLE);
-        } else if (accountRepository.findById(Long.valueOf(String.valueOf(passedObject.getAccountId()))).isEmpty()) {
+        } else if (accountRepository.findById(Long.valueOf(accountId)).isEmpty()) {
             return new ResponseEntity<>("AccountId not found",
                     HttpStatus.NOT_ACCEPTABLE);
-        } else if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getAmount())) || !GenericValidator.isDouble(passedObject.getAmount())) {
+        } else if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getAmount())) || !GenericValidator.isDouble(passedObject.getBalance())) {
             return new ResponseEntity<>("Amount must be provided as a valid double",
                     HttpStatus.NOT_ACCEPTABLE);
         }
