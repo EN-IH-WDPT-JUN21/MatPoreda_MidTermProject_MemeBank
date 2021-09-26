@@ -11,7 +11,7 @@
 [![Santander][Santander-shield]][Santander-url]
 
 <!-- PROJECT LOGO -->
-![Logo](src/main/resources/images/CRM8.jpg)
+![Logo](src/main/resources/static/MEME_BANK_API_LOGO.jpg)
 
 <br />
 <p align="center">
@@ -116,7 +116,7 @@ Patterns that indicate fraud include:
 
 
 ### Class Diagram
-![Class Diagram](src/main/resources/diagrams/Class%20Diagram.svg)
+![Class Diagram](src/main/resources/static/CLASS_DIAGRAM.svg)
 
 ### Database Diagram
 ![Database Diagram](src/main/resources/static/DB_SCHEMA.svg)
