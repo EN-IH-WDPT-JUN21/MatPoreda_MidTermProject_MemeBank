@@ -34,6 +34,7 @@ public class CreditCard extends Account{
     @DecimalMin(value="0.1", message="Interest rate for credit card cannot be lower than 0.1")
     @Column(columnDefinition = "decimal(19,10) default 0.2")
     private BigDecimal interestRate;
+
     public CreditCard() {
     }
 
@@ -42,4 +43,5 @@ public class CreditCard extends Account{
         return //this.monthlyMaintenanceFee;
         null;
     }
+
 }

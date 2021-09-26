@@ -120,8 +120,8 @@ public class AccountController {
         } else if (accountRepository.findById(Long.valueOf(accountId)).isEmpty()) {
             return new ResponseEntity<>("AccountId not found",
                     HttpStatus.NOT_ACCEPTABLE);
-        } else if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getAmount())) || !GenericValidator.isDouble(passedObject.getBalance())) {
-            return new ResponseEntity<>("Amount must be provided as a valid double",
+        } else if (GenericValidator.isBlankOrNull(String.valueOf(passedObject.getBalance())) || !GenericValidator.isDouble(passedObject.getBalance())) {
+            return new ResponseEntity<>("Balance must be provided as a valid double",
                     HttpStatus.NOT_ACCEPTABLE);
         }
 

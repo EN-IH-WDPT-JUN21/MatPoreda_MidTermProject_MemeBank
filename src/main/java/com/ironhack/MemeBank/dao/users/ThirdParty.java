@@ -16,6 +16,5 @@ public class ThirdParty extends User{
     private String salt;
 
     public ThirdParty() {
-        
     }
 }

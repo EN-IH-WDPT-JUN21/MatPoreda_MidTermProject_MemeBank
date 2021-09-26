@@ -6,6 +6,7 @@ import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Role;
 import com.ironhack.MemeBank.dao.Transaction;
 import com.ironhack.MemeBank.dao.accounts.Account;
+import com.ironhack.MemeBank.dao.accounts.Checking;
 import com.ironhack.MemeBank.dao.accounts.Savings;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.users.Admin;
@@ -13,6 +14,7 @@ import com.ironhack.MemeBank.dao.users.ThirdParty;
 import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.CreateAccountDTO;
 import com.ironhack.MemeBank.dto.CreateUserDTO;
+import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
 import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.enums.Status;
@@ -80,6 +82,12 @@ class AccountControllerTest {
     AccountHolderRepository accountHolderRepository;
 
     @Autowired
+    CheckingRepository checkingRepository;
+
+    @Autowired
+    CreditCardRepository CreditCardRepository;
+
+    @Autowired
     AccountService accountService;
 
     @Autowired
@@ -99,6 +107,9 @@ class AccountControllerTest {
 
     Savings savings1;
     Savings savings2;
+    Savings savings5;
+
+    Checking checking;
 
     Role roleAdmin;
     Role roleThirdParty;
@@ -118,7 +129,7 @@ class AccountControllerTest {
         roleAdmin=new Role("ADMIN");
         admin1=new Admin();
         admin1.setRole(roleAdmin);
-        admin1.setUsername("admin_name");
+        admin1.setUsername("admin_name1");
         admin1.setPassword("admin_password");
         adminRepository.save(admin1);
 
@@ -126,13 +137,13 @@ class AccountControllerTest {
         accountHolder1=new AccountHolder();
         accountHolder1.setRole(roleAccountHolder);
         accountHolder1.setUsername("accountHolder1_name");
-        accountHolder1.setPassword("accountHolder1_password");
+        accountHolder1.setPassword("accountHolder_password");
 
         roleThirdParty=new Role("THIRD_PARTY");
         thirdParty1=new ThirdParty();
         thirdParty1.setRole(roleThirdParty);
         thirdParty1.setUsername("thirdParty1_name");
-        thirdParty1.setPassword("thirdParty1_password");
+        thirdParty1.setPassword("thirdParty_password");
         thirdPartyRepository.save(thirdParty1);
 
         savings1=new Savings();
@@ -143,122 +154,69 @@ class AccountControllerTest {
         savings1.setPenaltyFee(new Money(new BigDecimal("40")));
         savings1.setCreationDate(LocalDate.of(2020,12,1));
         savings1.setSecretKey("[B@25ecdecd");
+        savings1=savingsRepository.save(savings1);
 
-        savings2=new Savings();
-        savings2.setAccountType(AccountType.SAVINGS);
-        savings2.setPrimaryOwner(accountHolder1);
-        savings2.setStatus(Status.ACTIVE);
-        savings2.setBalance(new Money(new BigDecimal("1000")));
-        savings2.setPenaltyFee(new Money(new BigDecimal("40")));
-        savings2.setCreationDate(LocalDate.of(2020,12,1));
-        savings2.setSecretKey("[C@25ecdecd");
-        savingsRepository.saveAll(List.of(savings1,savings2));
     }
 
     @AfterEach
     void tearDown() {
-        adminRepository.deleteAll();
         userRepository.deleteAll();
+        adminRepository.deleteAll();
         thirdPartyRepository.deleteAll();
         accountHolderRepository.deleteAll();
+
         transactionRepository.deleteAll();
+
         accountRepository.deleteAll();
+        savingsRepository.deleteAll();
+        checkingRepository.deleteAll();
+
     }
 
 
     @Test
     void getAllAccountsWithAdminAuthorities() throws Exception{
         MvcResult mvcResult = mockMvc.perform(
-                get("/accounts/all").with(user("admin_name").password("admin_password").roles("ADMIN")))
+                get("/accounts/all").with(user("admin_name1").password("admin_password").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn();
         assertTrue(mvcResult.getResponse().getContentAsString().contains("accountHolder1_name"));
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("[C@25ecdecd"));
-    }
-
-    @Test
-    void getNoAccountsWithAccountHolderAuthorities() throws Exception{
-        Authentication authentication = Mockito.mock(Authentication.class);
-// Mockito.whens() for your authorization object
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        MvcResult mvcResult = mockMvc.perform(
-                get("/accounts/all").with(user("accountHolder1_name").password("accountHolder1_password").roles("ACCOUNT_HOLDER")))
- //               .andExpect(status().isOk())
-                .andReturn();
-        System.out.println(mvcResult.getResponse().getContentAsString());
-        assertFalse(mvcResult.getResponse().getContentAsString().contains("accountHolder1_name"));
-        assertFalse(mvcResult.getResponse().getContentAsString().contains("[C@25ecdecd"));
-    }
-
-    @Test
-    void getOwnedAccountsWithUserAuthorities() throws Exception{
-        Authentication authentication = Mockito.mock(Authentication.class);
-// Mockito.whens() for your authorization object
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        MvcResult mvcResult = mockMvc.perform(
-                get("/accounts").with(user("accountHolder1_name").password("accountHolder1_password").roles("ACCOUNT_HOLDER")))
- //               .andExpect(status().isOk())
-                .andReturn();
-        System.out.println(mvcResult.getResponse().getContentAsString());
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("accountHolder1_name"));
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("[C@25ecdecd"));
-    }
-
-    @Test
-    void getNoAccountsWithThirdPartyAuthorities() throws Exception{
-        Authentication authentication = Mockito.mock(Authentication.class);
-// Mockito.whens() for your authorization object
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        MvcResult mvcResult = mockMvc.perform(
-                get("/accounts").with(user("thirdParty1_name").password("thirdParty1_password").roles("THIRD_PARTY")))
- //               .andExpect(status().isOk())
-                .andReturn();
-        System.out.println(mvcResult.getResponse().getContentAsString());
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("accountHolder1_name"));
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("[C@25ecdecd"));
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("[B@25ecdecd"));
     }
 
     @Test
     void store() throws Exception{
-        CreateAccountDTO savings3 =new CreateAccountDTO();
-        savings3.setAccountType("SAVINGS");
-        savings3.setPrimaryOwnerName(accountHolder1.getUsername());
-        savings3.setBalance("1000");
-        savings3.setPenaltyFee("40");
-        savings3.setCreationDate("2020-12-10");
+        CreateAccountDTO credit_card =new CreateAccountDTO();
+        credit_card.setAccountType("CREDIT_CARD");
+        credit_card.setPrimaryOwnerName(accountHolder1.getUsername());
+        credit_card.setBalance("1000");
+        credit_card.setPenaltyFee("40");
+        credit_card.setInterestRate("0.10");
+        credit_card.setCreationDate("2020-12-10");
 
-        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
-        String body=objectMapper.writeValueAsString(savings3);
+//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
+        String body=objectMapper.writeValueAsString(credit_card);
         System.out.println(body);
-        MvcResult mvcResult=mockMvc.perform(post("/accounts").with(user("accountHolder1_name").password("accountHolder1_password").roles("ACCOUNT_HOLDER"))
+        MvcResult mvcResult=mockMvc.perform(post("/accounts").with(user("admin_name1").password("admin_password").roles("ADMIN"))
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(status().isCreated())
                 .andReturn();
         System.out.println(mvcResult.getResponse().getContentAsString());
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("New savings account created"));
-        assertTrue(accountRepository.findByPrimaryOwnerOrSecondaryOwner(accountHolder1, accountHolder1).size()==3);
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("New credit card account created"));
+        assertTrue(accountRepository.findByPrimaryOwnerOrSecondaryOwner(accountHolder1, accountHolder1).size()==2);
     }
 
     @Test
     void setBalance() throws Exception{
-        CreateAccountDTO savings3 =new CreateAccountDTO();
-        Long id=savingsRepository.findBySecretKey("[C@25ecdecd").get().getId();
-        savings3.setBalance("5600.00");
+        TransactionDTO setBalance=new TransactionDTO();
+        Long id=savings1.getId();
+        setBalance.setBalance("1000");
 
-        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
-        String body=objectMapper.writeValueAsString(savings3);
+//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
+        String body=objectMapper.writeValueAsString(setBalance);
         System.out.println(body);
-        MvcResult mvcResult=mockMvc.perform(post("/accounts/set_balance/"+id).with(user("admin_name").password("admin_password").roles("ADMIN"))
+        MvcResult mvcResult=mockMvc.perform(post("/accounts/set_balance/"+id.toString()).with(user("admin_name1").password("admin_password").roles("ADMIN"))
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

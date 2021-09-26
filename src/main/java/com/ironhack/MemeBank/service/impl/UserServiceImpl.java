@@ -50,21 +50,6 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl() {
     }
 
-//    public void save(User user) {
-//        userRepository.save(user);
-//    }
-//
-//    public User findByUsername(String username) {
-//        return userRepository.findByUsername(username).get();
-//    }
-//
-//    public User saveUser (User user) {
-//        return userRepository.save(user);
-//    }
-//
-//    public List<User> findUserList() {
-//        return userRepository.findAll();
-//    }
 
         public ResponseEntity<?> storeAny(@RequestBody CreateUserDTO passedObject) {
         if(GenericValidator.isBlankOrNull(passedObject.getRoleType()) || GenericValidator.isBlankOrNull(String.valueOf(passedObject.getRole()))){
