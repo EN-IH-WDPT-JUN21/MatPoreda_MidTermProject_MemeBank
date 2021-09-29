@@ -21,7 +21,7 @@ public class CreditCard extends Account{
             @AttributeOverride( name = "currency", column = @Column(name = "creditLimit_currency")),
     })
     @Column(columnDefinition = "numeric default 100")
-    private Money creditLimit;
+    private Money creditLimit=new Money(new BigDecimal("100"));
 
     @Embedded
     @AttributeOverrides({
@@ -29,11 +29,11 @@ public class CreditCard extends Account{
             @AttributeOverride( name = "currency", column = @Column(name = "penaltyFee_currency", insertable=false, updatable=false)),
     })
     @Column(columnDefinition = "numeric default 40")
-    private Money penaltyFee;
+    private Money penaltyFee=new Money(new BigDecimal("40"));
 
     @DecimalMin(value="0.1", message="Interest rate for credit card cannot be lower than 0.1")
     @Column(columnDefinition = "decimal(19,10) default 0.2")
-    private BigDecimal interestRate;
+    private BigDecimal interestRate=new BigDecimal("0.2");
 
     public CreditCard() {
     }

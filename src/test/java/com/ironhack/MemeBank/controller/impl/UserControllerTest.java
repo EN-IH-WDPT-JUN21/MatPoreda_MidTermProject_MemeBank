@@ -1,20 +1,14 @@
 package com.ironhack.MemeBank.controller.impl;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironhack.MemeBank.dao.Address;
 import com.ironhack.MemeBank.dao.Role;
-import com.ironhack.MemeBank.dao.accounts.Account;
-import com.ironhack.MemeBank.dao.accounts.Savings;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.users.Admin;
 import com.ironhack.MemeBank.dao.users.ThirdParty;
-import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.CreateUserDTO;
 import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.repository.*;
-import com.ironhack.MemeBank.service.impl.AccountService;
-import com.ironhack.MemeBank.service.impl.TransactionService;
-import com.ironhack.MemeBank.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -41,12 +32,6 @@ class UserControllerTest {
 
     @Autowired
     TransactionRepository transactionRepository;
-
-    @Autowired
-    TransactionService transactionService;
-
-    @Autowired
-    UserServiceImpl userServiceImpl;
 
     @Autowired
     UserRepository userRepository;
@@ -64,33 +49,20 @@ class UserControllerTest {
     AccountHolderRepository accountHolderRepository;
 
 
-    @Autowired
-    AccountService accountService;
-
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper=new ObjectMapper().findAndRegisterModules();
 
 
     Admin admin1;
-    Admin admin2;
 
     AccountHolder accountHolder1;
-    AccountHolder accountHolder2;
 
     ThirdParty thirdParty3;
-    ThirdParty thirdParty4;
-
-    Savings savings1;
-    Savings savings2;
 
     Role roleAdmin;
     Role roleThirdParty;
     Role roleAccountHolder;
 
-    User user1;
-    User user2;
-    Account account1;
-    Account account2;
 
     @BeforeEach
     void setUp() {
@@ -168,7 +140,6 @@ class UserControllerTest {
             admin2.setRoleType(roleAdmin.getName());
             admin2.setUsername("admin3_name");
             admin2.setPassword("admin_password");
-//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
         String body=objectMapper.writeValueAsString(admin2);
         System.out.println(body);
         MvcResult mvcResult=mockMvc.perform(post("/users")
@@ -189,8 +160,14 @@ class UserControllerTest {
         accountHolder2.setUsername("accountHolder2_name");
         accountHolder2.setPassword("accountHolder_password");
         accountHolder2.setDateOfBirth("1980-12-31");
+        Address address=new Address();
+        address.setCountry("Poland");
+        address.setStreet("street_name");
+        address.setHomeNumber("100");
+        address.setTown("Warsaw");
+        address.setZipCode("10-100");
+        accountHolder2.setPrimaryAddress(address);
 
-//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
         String body=objectMapper.writeValueAsString(accountHolder2);
         System.out.println(body);
         MvcResult mvcResult=mockMvc.perform(post("/users")
@@ -202,6 +179,8 @@ class UserControllerTest {
         assertTrue(mvcResult.getResponse().getContentAsString().contains("New ACCOUNT_HOLDER created"));
         assertTrue(userRepository.findByUsername("accountHolder2_name").isPresent());
         assertEquals(RoleType.ACCOUNT_HOLDER.toString(), userRepository.findByUsername("accountHolder2_name").get().getRole().getName());
+        assertEquals("Poland", accountHolderRepository.findByUsername("accountHolder2_name").get().getPrimaryAddress().getCountry());
+
     }
 
     @Test
@@ -211,8 +190,6 @@ class UserControllerTest {
         thirdParty4.setUsername("thirdParty4_name");
         thirdParty4.setPassword("thirdParty_password");
 
-
-//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
         String body=objectMapper.writeValueAsString(thirdParty4);
         System.out.println(body);
         MvcResult mvcResult=mockMvc.perform(post("/users")

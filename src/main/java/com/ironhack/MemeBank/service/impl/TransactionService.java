@@ -262,8 +262,9 @@ public class TransactionService {
 
     public Account evaluateAccounts(TransactionDTO transactionDTO) {
         Account account = null;
+
         if (accountRepository.findById(Long.valueOf(transactionDTO.getAccountId())).isPresent() && thirdPartyRepository.findById(Long.valueOf(transactionDTO.getTransactionInitiatorUserId())).isPresent()) {
-            account = accountRepository.findById(Long.valueOf(transactionDTO.getAccountId())).get();
+           account = accountRepository.findById(Long.valueOf(transactionDTO.getAccountId())).get();
             ThirdParty thirdParty = thirdPartyRepository.findById(Long.valueOf(transactionDTO.getTransactionInitiatorUserId())).get();
             if (account.getSecretKey().equals(transactionDTO.getSecretKey()) && thirdParty.getHashKey().equals(transactionDTO.getHashKey())) {
                 return account;

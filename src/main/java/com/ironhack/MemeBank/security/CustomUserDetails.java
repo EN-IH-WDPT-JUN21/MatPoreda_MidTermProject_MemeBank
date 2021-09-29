@@ -4,6 +4,8 @@ import com.ironhack.MemeBank.dao.users.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -32,6 +34,11 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return user.getUsername();
     }
+
+//    @Override
+//    public String getId() {
+//        return String.valueOf(user.getId());
+//    }
 
     @Override
     public boolean isAccountNonExpired() {

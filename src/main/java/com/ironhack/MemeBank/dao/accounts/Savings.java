@@ -21,14 +21,14 @@ public class Savings extends Account {
     @DecimalMax(value="0.5", inclusive=true, message="Interest rate cannot be higher than 0.5")
     @Column(columnDefinition = "decimal(19,8) default 0.0025", precision = 10, scale = 5)
     @Type(type = "big_decimal")
-    private BigDecimal interestRate;
+    private BigDecimal interestRate=new BigDecimal("0.0025");
 
     @Embedded
     @AttributeOverrides({
             @AttributeOverride( name = "amount", column = @Column(name = "minimum_balance_amount",columnDefinition = "decimal(19,8) default 1000.00", precision = 10, scale = 10)),
             @AttributeOverride( name = "currency", column = @Column(name = "minimum_balance_currency")),
     })
-    private Money minimumBalance;
+    private Money minimumBalance=new Money(new BigDecimal("1000"));
 
     public Savings() {
     }

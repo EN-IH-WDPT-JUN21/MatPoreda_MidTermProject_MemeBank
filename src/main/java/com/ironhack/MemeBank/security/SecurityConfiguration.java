@@ -59,7 +59,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 //users
                 .mvcMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN")  //return all users
                 .mvcMatchers(HttpMethod.GET, "/users/admins").hasAnyRole("ADMIN") // return all admins
-                .mvcMatchers(HttpMethod.GET, "/users/third_party").hasAnyRole("ADMIN") // return all third_party
+                .mvcMatchers(HttpMethod.GET, "/users/third_party").hasAnyRole("ADMIN", "THIRD_PARTY") // return all third_party
                 .mvcMatchers(HttpMethod.GET, "/users/account_holders").hasAnyRole("ADMIN") // return all account_holders
 
                 //*********POST********

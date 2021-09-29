@@ -160,4 +160,9 @@ public class UserServiceImpl implements UserService {
             return  principal.toString();
         }
     }
+
+    public Long getCurrentUserId(){
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return currentUser.getId();
+    }
 }

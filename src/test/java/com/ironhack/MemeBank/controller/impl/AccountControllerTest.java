@@ -1,48 +1,31 @@
 package com.ironhack.MemeBank.controller.impl;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironhack.MemeBank.dao.Money;
 import com.ironhack.MemeBank.dao.Role;
-import com.ironhack.MemeBank.dao.Transaction;
-import com.ironhack.MemeBank.dao.accounts.Account;
-import com.ironhack.MemeBank.dao.accounts.Checking;
 import com.ironhack.MemeBank.dao.accounts.Savings;
 import com.ironhack.MemeBank.dao.users.AccountHolder;
 import com.ironhack.MemeBank.dao.users.Admin;
 import com.ironhack.MemeBank.dao.users.ThirdParty;
-import com.ironhack.MemeBank.dao.users.User;
 import com.ironhack.MemeBank.dto.CreateAccountDTO;
-import com.ironhack.MemeBank.dto.CreateUserDTO;
 import com.ironhack.MemeBank.dto.TransactionDTO;
 import com.ironhack.MemeBank.enums.AccountType;
-import com.ironhack.MemeBank.enums.RoleType;
 import com.ironhack.MemeBank.enums.Status;
 import com.ironhack.MemeBank.repository.*;
-import com.ironhack.MemeBank.service.impl.AccountService;
-import com.ironhack.MemeBank.service.impl.TransactionService;
-import com.ironhack.MemeBank.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,19 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 class AccountControllerTest {
 
-
-
     @Autowired
     WebApplicationContext webApplicationContext;
 
     @Autowired
     TransactionRepository transactionRepository;
-
-    @Autowired
-    TransactionService transactionService;
-
-    @Autowired
-    UserServiceImpl userServiceImpl;
 
     @Autowired
     UserRepository userRepository;
@@ -85,42 +60,18 @@ class AccountControllerTest {
     CheckingRepository checkingRepository;
 
     @Autowired
-    CreditCardRepository CreditCardRepository;
-
-    @Autowired
-    AccountService accountService;
-
-    @Autowired
     SavingsRepository savingsRepository;
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper=new ObjectMapper().findAndRegisterModules();
 
     Admin admin1;
-    Admin admin2;
-
     AccountHolder accountHolder1;
-    AccountHolder accountHolder2;
-
     ThirdParty thirdParty1;
-    ThirdParty thirdParty2;
-
     Savings savings1;
-    Savings savings2;
-    Savings savings5;
-
-    Checking checking;
-
     Role roleAdmin;
     Role roleThirdParty;
     Role roleAccountHolder;
-
-    User user1;
-    User user2;
-
-    Transaction transaction1;
-    Transaction transaction2;
-
 
     @BeforeEach
     void setUp() {
@@ -155,7 +106,6 @@ class AccountControllerTest {
         savings1.setCreationDate(LocalDate.of(2020,12,1));
         savings1.setSecretKey("[B@25ecdecd");
         savings1=savingsRepository.save(savings1);
-
     }
 
     @AfterEach
@@ -164,13 +114,10 @@ class AccountControllerTest {
         adminRepository.deleteAll();
         thirdPartyRepository.deleteAll();
         accountHolderRepository.deleteAll();
-
         transactionRepository.deleteAll();
-
         accountRepository.deleteAll();
         savingsRepository.deleteAll();
         checkingRepository.deleteAll();
-
     }
 
 
@@ -194,13 +141,12 @@ class AccountControllerTest {
         credit_card.setInterestRate("0.10");
         credit_card.setCreationDate("2020-12-10");
 
-//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
         String body=objectMapper.writeValueAsString(credit_card);
         System.out.println(body);
         MvcResult mvcResult=mockMvc.perform(post("/accounts").with(user("admin_name1").password("admin_password").roles("ADMIN"))
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isCreated())
+                .andExpect(status().isCreated())
                 .andReturn();
         System.out.println(mvcResult.getResponse().getContentAsString());
         assertTrue(mvcResult.getResponse().getContentAsString().contains("New credit card account created"));
@@ -208,12 +154,11 @@ class AccountControllerTest {
     }
 
     @Test
-    void setBalance() throws Exception{
+    void setBalanceSuccess() throws Exception{
         TransactionDTO setBalance=new TransactionDTO();
         Long id=savings1.getId();
         setBalance.setBalance("1000");
 
-//        objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
         String body=objectMapper.writeValueAsString(setBalance);
         System.out.println(body);
         MvcResult mvcResult=mockMvc.perform(post("/accounts/set_balance/"+id.toString()).with(user("admin_name1").password("admin_password").roles("ADMIN"))
@@ -223,5 +168,22 @@ class AccountControllerTest {
                 .andReturn();
         System.out.println(mvcResult.getResponse().getContentAsString());
         assertTrue(mvcResult.getResponse().getContentAsString().contains("balance successfully changed"));
+    }
+
+    @Test
+    void setBalanceNotValidBalance() throws Exception{
+        TransactionDTO setBalance=new TransactionDTO();
+        Long id=savings1.getId();
+        setBalance.setBalance("T1000");
+
+        String body=objectMapper.writeValueAsString(setBalance);
+        System.out.println(body);
+        MvcResult mvcResult=mockMvc.perform(post("/accounts/set_balance/"+id.toString()).with(user("admin_name1").password("admin_password").roles("ADMIN"))
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotAcceptable())
+                .andReturn();
+        System.out.println(mvcResult.getResponse().getContentAsString());
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Balance must be provided as a valid double"));
     }
 }

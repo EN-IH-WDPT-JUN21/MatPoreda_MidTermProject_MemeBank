@@ -63,7 +63,7 @@ public class TransactionController {
     ) {
 
         passedObject.setHashKey(hashedKey);
-        passedObject.setTransactionInitiatorUserId(String.valueOf(thirdPartyRepository.findByUsername(userServiceImpl.getCurrentUsername()).get().getId()));
+        passedObject.setTransactionInitiatorUserId(String.valueOf(thirdPartyRepository.findById(userServiceImpl.getCurrentUserId()).get().getId()));
         transactionService.evaluateAccounts(passedObject);
 
 
@@ -152,7 +152,7 @@ public class TransactionController {
                 newPenaltyFee.setAccount(accountRepository.save(newPenaltyFee.getAccount()));
                 transactionRepository.save(newPenaltyFee);
             }
-
+            System.out.println(newTransaction.getDate());
             return new ResponseEntity<>("Transaction was proceeded successfully",
                     HttpStatus.OK);
         }
